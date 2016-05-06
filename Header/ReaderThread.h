@@ -16,9 +16,9 @@
 #include "../DeadSigproc/DeadSigproc.h"
 
 #include "ReaderThreadData.h"
+#include "RFIMConfiguration.h"
 
 //The reader threads 'main' function
-void ReaderThreadMain(std::vector<SigprocFilterbank*> filterbankVector, ReaderThreadData* RTD);
-
+void ReaderThreadMain(std::vector<SigprocFilterbank*>* filterbankVector, ReaderThreadData* RTD, RFIMConfiguration* RFIMConfig);
 
 #endif /* HEADER_READERTHREAD_H_ */

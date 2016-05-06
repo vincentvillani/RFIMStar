@@ -22,16 +22,16 @@
 int main()
 {
 
-	std::string filenamePrefix = "/lustre/projects/p002_swin/surveys/SUPERB/2016-01-05-12:07:06/";
+	std::string filenamePrefix = "/Users/vincentvillani/Desktop/FilterbankFiles/2016-01-05-12:07:06/"; //"/lustre/projects/p002_swin/surveys/SUPERB/2016-01-05-12:07:06/";
 	std::string filenamePostfix = "/2016-01-05-12:07:06.fil";
 	std::stringstream ss;
 
-	uint32_t workerThreads = 6;
+	uint32_t workerThreads = 2;
 	uint32_t windowSize = 15625;
 	//uint32_t channelNum = 1024;
-	uint32_t batchSize = 5;
-	uint32_t beamNum = 13;
-	uint32_t numberOfRawDataBlocks = 5;
+	uint32_t batchSize = 2;
+	uint32_t beamNum = 2;
+	uint32_t numberOfRawDataBlocks = 2;
 
 
 	//Open the filterbanks
@@ -83,11 +83,13 @@ int main()
 
 
 	//Start threads
-	std::thread readingThread(ReaderThreadMain, filterbanks, readerThreadData);
+	//std::thread readingThread(ReaderThreadMain, filterbanks, readerThreadData, &configuration);
 
 
 	//Wait till should exit is set (join with all created threads?)
-	readingThread.join();
+	//readingThread.join();
+
+	ReaderThreadMain(&filterbanks, readerThreadData, &configuration);
 
 
 	//Free all memory
