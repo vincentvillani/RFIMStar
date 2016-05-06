@@ -9,8 +9,10 @@
 #include <sstream>
 #include <vector>
 
-#include "DeadSigproc/DeadSigproc.h"
+//#include "DeadSigproc/DeadSigproc.h"
 #include "Header/RFIMConfiguration.h"
+
+#include "Header/ReaderThread.h"
 
 
 //TODO: Make the configuration be setup by passing arguments to the program via the command line
@@ -23,7 +25,7 @@ int main()
 
 	uint32_t workerThreads = 6;
 	uint32_t windowSize = 15625;
-	uint32_t channelNum = 1024;
+	//uint32_t channelNum = 1024;
 	uint32_t batchSize = 5;
 	uint32_t beamNum = 13;
 	uint32_t numberOfRawDataBlocks = 5;
@@ -60,12 +62,12 @@ int main()
 			beamNum, numberOfRawDataBlocks, (uint32_t)filterbanks[0]->get_nbits());
 
 	//Allocate raw data block memory
-	std::vector<RawDataBlock*> rawDataBlockVector;
+	std::vector<RawDataBlock> rawDataBlockVector;
 	uint64_t rawDataBlockArrayLength = (workerThreads * windowSize * beamNum * batchSize * configuration.numBitsPerSample) / 8;
 
 	for(uint32_t i = 0; i < numberOfRawDataBlocks; ++i)
 	{
-		RawDataBlock* RDB = new RawDataBlock(rawDataBlockArrayLength, configuration.numBitsPerSample);
+		RawDataBlock RDB(rawDataBlockArrayLength, configuration.numBitsPerSample);
 		rawDataBlockVector.push_back(RDB);
 	}
 
@@ -80,12 +82,6 @@ int main()
 	//Wait till should exit is set (join with all created threads?)
 
 	//Free all memory
-
-	//Raw data blocks
-	for(uint32_t i = 0; i < rawDataBlockVector.size(); ++i)
-	{
-		delete rawDataBlockVector[i];
-	}
 
 	//Filterbanks
 	for(uint32_t i = 0; i < filterbanks.size(); ++i)

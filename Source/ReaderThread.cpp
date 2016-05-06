@@ -5,10 +5,12 @@
  *      Author: vincentvillani
  */
 
-#include <stdint.h>
-
 #include "../Header/ReaderThread.h"
-#include "../DeadSigproc/DeadSigproc.h"
+
+#include <stdint.h>
+#include <vector>
+
+
 
 
 //Filterbanks are already open and ready to go
