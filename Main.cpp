@@ -8,6 +8,9 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <thread>
+#include <functional>
+#include <algorithm>
 
 //#include "DeadSigproc/DeadSigproc.h"
 #include "Header/RFIMConfiguration.h"
@@ -34,7 +37,7 @@ int main()
 	//Open the filterbanks
 	std::vector<SigprocFilterbank*> filterbanks;
 
-	for(uint32_t i = 0; i < beamNum; ++i)
+	for(uint32_t i = 1; i < beamNum + 1; ++i)
 	{
 		ss << filenamePrefix;
 
@@ -61,33 +64,48 @@ int main()
 	RFIMConfiguration configuration(workerThreads, windowSize, (uint32_t)filterbanks[0]->get_nchans(), batchSize,
 			beamNum, numberOfRawDataBlocks, (uint32_t)filterbanks[0]->get_nbits());
 
+
 	//Allocate raw data block memory
-	std::vector<RawDataBlock> rawDataBlockVector;
+	std::vector<RawDataBlock*> rawDataBlockVector;
 	uint64_t rawDataBlockArrayLength = (workerThreads * windowSize * beamNum * batchSize * configuration.numBitsPerSample) / 8;
+
 
 	for(uint32_t i = 0; i < numberOfRawDataBlocks; ++i)
 	{
-		RawDataBlock RDB(rawDataBlockArrayLength, configuration.numBitsPerSample);
+		RawDataBlock* RDB = new RawDataBlock(rawDataBlockArrayLength, configuration.numBitsPerSample);
 		rawDataBlockVector.push_back(RDB);
 	}
 
+
 	//Setup thread data objects and mailboxes etc
-	ReaderThreadData readerThreadData;
-	readerThreadData.rawDataBlockQueue = rawDataBlockVector;
+	ReaderThreadData* readerThreadData = new ReaderThreadData(&rawDataBlockVector);
 
 
 
 	//Start threads
+	std::thread readingThread(ReaderThreadMain, filterbanks, readerThreadData);
+
 
 	//Wait till should exit is set (join with all created threads?)
+	readingThread.join();
+
 
 	//Free all memory
+	//-----------------------------
 
 	//Filterbanks
 	for(uint32_t i = 0; i < filterbanks.size(); ++i)
 	{
 		delete filterbanks[i];
 	}
+
+	//Raw data blocks
+	for(uint32_t i = 0; i < rawDataBlockVector.size(); ++i)
+	{
+		delete rawDataBlockVector[i];
+	}
+
+	delete readerThreadData;
 
 
 	return 0;

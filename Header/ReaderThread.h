@@ -15,13 +15,7 @@
 
 #include "../DeadSigproc/DeadSigproc.h"
 
-class ReaderThreadData
-{
-public:
-	std::vector<RawDataBlock> rawDataBlockQueue;
-	std::mutex rawDataBlockQueueMutex;
-	std::condition_variable rawDataBlockQueueCV;
-};
+#include "ReaderThreadData.h"
 
 //The reader threads 'main' function
 void ReaderThreadMain(std::vector<SigprocFilterbank*> filterbankVector, ReaderThreadData* RTD);

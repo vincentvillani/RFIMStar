@@ -14,21 +14,8 @@
 
 
 //Filterbanks are already open and ready to go
-void ReaderThreadMean(std::vector<SigprocFilterbank*> filterbankVector, ReaderThreadData* RTD)
+void ReaderThreadMain(std::vector<SigprocFilterbank*> filterbankVector, ReaderThreadData* RTD)
 {
-
-	/*
-	//1. Open all the input filterbank files
-	for(uint32_t i = 0; i < filterbankFilenamesVector.size(); ++i)
-	{
-		SigprocFilterbank* filterbankFile = new SigprocFilterbank(filterbankFilenamesVector[i]);
-
-		//Add it to the filterbank vector
-		filterbankVector.push_back(filterbankFile);
-	}
-	*/
-
-	//2. Setup the raw data blocks based on the configuration (DONE SOMEWHERE ELSE)
 
 	//3. Start reading in data (Raw data blocks should be setup at this point)
 
@@ -49,5 +36,6 @@ void ReaderThreadMean(std::vector<SigprocFilterbank*> filterbankVector, ReaderTh
 
 	//7. return
 
+	std::cout << "Reader thread finished" << std::endl;
 
 }
