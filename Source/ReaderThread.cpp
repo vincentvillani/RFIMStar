@@ -14,25 +14,25 @@
 
 
 //Filterbanks are already open and ready to go
-void ReaderThreadMain(std::vector<SigprocFilterbank*>* filterbankVector, ReaderThreadData* RTD, RFIMConfiguration* RFIMConfig)
+void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderThreadData* RTD, RFIMConfiguration* RFIMConfig)
 {
 
-	/*
+
 	uint64_t* bytesReadPerBeam = new uint64_t[RFIMConfig->beamNum];
 
 	//Figure out how many bytes we should read per filterbank each iteration
 	uint64_t bytesToReadPerFilterbank = (RFIMConfig->windowSize * RFIMConfig->channelNum * RFIMConfig->batchSize *
 			RFIMConfig->numberOfWorkerThreads * RFIMConfig->numBitsPerSample) / 8;
 
-	std::cout << "Bytes to read per beam: " << bytesToReadPerFilterbank << std::endl;
+	//std::cout << "Bytes to read per beam: " << bytesToReadPerFilterbank << std::endl;
 
-	*/
+
 
 	//for all the other filterbank files
-	while((*(filterbankVector))[0]->hasReachedEOF() == false)
+	while(filterbankVector[0]->hasReachedEOF() == false)
 	{
 
-		std::cout << "queue size: " << RTD->rawDataBlockQueue->size() << std::endl;
+		//std::cout << "queue size: " << RTD->rawDataBlockQueue->size() << std::endl;
 
 		//Aquire the lock
 		std::unique_lock<std::mutex> readerThreadLockGuard(*RTD->rawDataBlockQueueMutex);
@@ -40,19 +40,19 @@ void ReaderThreadMain(std::vector<SigprocFilterbank*>* filterbankVector, ReaderT
 		//Do we have to wait or can we start work right away?
 		if(RTD->rawDataBlockQueue->size() == 0)
 		{
-			std::cout << "Waiting..." << std::endl;
+			//std::cout << "Waiting..." << std::endl;
 
 			//We have to wait for a buffer to use
 
 			//This checks the predicate, if it is false it releases the lock and puts the thread to sleep
 			//Once someone has alerted the condition variable the lock is aquired again and the predicate is checked again
 			//If it is true it will keep the lock aquired
-			//RTD->rawDataBlockQueueCV->wait(readerThreadLockGuard, [&]{return RTD->rawDataBlockQueue->size();});
+			RTD->rawDataBlockQueueCV->wait(readerThreadLockGuard, [&]{return RTD->rawDataBlockQueue->size();});
 
 
 		}
 
-		std::cout << "We have work to do!" << std::endl;
+		//std::cout << "We have work to do!" << std::endl;
 
 		//Once we wake and the predicate is satifised we should have the lock again.
 
@@ -63,20 +63,20 @@ void ReaderThreadMain(std::vector<SigprocFilterbank*>* filterbankVector, ReaderT
 
 
 		//At this point we should have a buffer, so release the mutex
-		readerThreadLockGuard.release();
+		readerThreadLockGuard.unlock();
 
 
-		/*
+
 		//Read in filterbank data
-		for(uint32_t i = 0; i < (*(filterbankVector)).size(); ++i)
+		for(uint32_t i = 0; i < filterbankVector.size(); ++i)
 		{
-			ReadFilterbankData((*(filterbankVector))[i], currentBuffer->packedRawData + bytesToReadPerFilterbank, bytesToReadPerFilterbank,
+			ReadFilterbankData(filterbankVector[i], currentBuffer->packedRawData + (i * bytesToReadPerFilterbank), bytesToReadPerFilterbank,
 					bytesReadPerBeam + i);
 
-			std::cout << "Read in filterbank data: " << i << ", bytes read " << bytesReadPerBeam[i] << std::endl;
+			//std::cout << "Read in filterbank data: " << i << ", bytes read " << bytesReadPerBeam[i] << std::endl;
 		}
 
-		std::cout << "Done reading in filterbank data!" << std::endl;
+		//std::cout << "Done reading in filterbank data!" << std::endl;
 
 
 
@@ -90,7 +90,7 @@ void ReaderThreadMain(std::vector<SigprocFilterbank*>* filterbankVector, ReaderT
 
 		//Tell the worker threads to only process the lowest number of bytes per filterbank
 		currentBuffer->usedDataLength = lowestBytes * RFIMConfig->beamNum;
-		*/
+
 
 
 		//TODO: Send it off to the worker threads

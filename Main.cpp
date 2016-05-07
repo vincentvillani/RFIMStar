@@ -22,8 +22,8 @@
 int main()
 {
 
-	std::string filenamePrefix = "/Users/vincentvillani/Desktop/FilterbankFiles/2016-01-05-12:07:06/"; //"/lustre/projects/p002_swin/surveys/SUPERB/2016-01-05-12:07:06/";
-	std::string filenamePostfix = "/2016-01-05-12:07:06.fil";
+	std::string filenamePrefix = "/home/vincent/Documents/FilterbankFiles/"; //"/lustre/projects/p002_swin/surveys/SUPERB/2016-01-05-12:07:06/";
+	std::string filenamePostfix = "/filter.fil";
 	std::stringstream ss;
 
 	uint32_t workerThreads = 2;
@@ -67,7 +67,8 @@ int main()
 
 	//Allocate raw data block memory
 	std::vector<RawDataBlock*> rawDataBlockVector;
-	uint64_t rawDataBlockArrayLength = (workerThreads * windowSize * beamNum * batchSize * configuration.numBitsPerSample) / 8;
+	uint64_t rawDataBlockArrayLength = (configuration.numberOfWorkerThreads * configuration.beamNum * configuration.windowSize * configuration.channelNum *
+			configuration.batchSize * configuration.numBitsPerSample) / 8;
 
 
 	for(uint32_t i = 0; i < numberOfRawDataBlocks; ++i)
@@ -89,7 +90,7 @@ int main()
 	//Wait till should exit is set (join with all created threads?)
 	//readingThread.join();
 
-	ReaderThreadMain(&filterbanks, readerThreadData, &configuration);
+	ReaderThreadMain(filterbanks, readerThreadData, &configuration);
 
 
 	//Free all memory
