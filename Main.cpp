@@ -73,7 +73,7 @@ int main()
 
 	for(uint32_t i = 0; i < numberOfRawDataBlocks; ++i)
 	{
-		RawDataBlock* RDB = new RawDataBlock(rawDataBlockArrayLength, configuration.numBitsPerSample);
+		RawDataBlock* RDB = new RawDataBlock(i, rawDataBlockArrayLength, configuration.numBitsPerSample);
 		rawDataBlockVector.push_back(RDB);
 	}
 
@@ -89,8 +89,6 @@ int main()
 
 	//Wait till should exit is set (join with all created threads?)
 	readingThread.join();
-
-	//ReaderThreadMain(filterbanks, readerThreadData, &configuration);
 
 
 	//Free all memory

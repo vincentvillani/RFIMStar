@@ -9,12 +9,23 @@
 #define HEADER_READERWORKERMAILBOX_H_
 
 
-#include "ReaderThread.h"
+
+#include "ReaderThreadData.h"
+#include "WorkerThreadData.h"
+
+#include "../DeadSigproc/RawDataBlock.h"
 
 class ReaderWorkerMailbox
 {
 public:
-	ReaderWorkerMailbox(ReaderThreadData* readerThreadData);
+
+	ReaderThreadData* readerThreadData;
+	std::vector<WorkerThreadData*>* workerThreadDataVector;
+
+	ReaderWorkerMailbox(ReaderThreadData* readerThreadData, std::vector<WorkerThreadData*>* workerThreadDataVector);
+	~ReaderWorkerMailbox();
+
+	void ReaderToWorkers_QueueRawDataBlock(RawDataBlock* rawDataBlock);
 };
 
 
