@@ -40,7 +40,7 @@ void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderT
 		//Do we have to wait or can we start work right away?
 		if(RTD->rawDataBlockQueue->size() == 0)
 		{
-			//std::cout << "Waiting..." << std::endl;
+			std::cout << "Reader thread is waiting for work..." << std::endl;
 
 			//We have to wait for a buffer to use
 
@@ -56,7 +56,7 @@ void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderT
 
 		//Once we wake and the predicate is satifised we should have the lock again.
 
-		//Get a reference to it and then remove it from the queue
+		//Get a reference to the buffer and then remove it from the queue
 		RawDataBlock* currentBuffer =  *(RTD->rawDataBlockQueue->end() - 1);
 		RTD->rawDataBlockQueue->erase( RTD->rawDataBlockQueue->end() - 1);
 
@@ -98,18 +98,9 @@ void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderT
 	}
 
 
-	//3. Start reading in data (Raw data blocks should be setup at this point)
 
-
-	//4. Remove the data blocks and place them in the worker threads queue
-
-	//5. Go back to step 3 if there are spare data blocks & more data to read in.
-	//If not go to sleep and wait till there are
-
-	//6. Free all allocate data in this thread
-	//delete [] bytesReadPerBeam;
-
-	//7. return
+	//Free memory allocated by this thread
+	delete [] bytesReadPerBeam;
 
 	std::cout << "Reader thread finished" << std::endl;
 

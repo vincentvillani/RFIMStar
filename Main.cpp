@@ -84,13 +84,13 @@ int main()
 
 
 	//Start threads
-	//std::thread readingThread(ReaderThreadMain, filterbanks, readerThreadData, &configuration);
+	std::thread readingThread(ReaderThreadMain, std::ref(filterbanks), readerThreadData, &configuration);
 
 
 	//Wait till should exit is set (join with all created threads?)
-	//readingThread.join();
+	readingThread.join();
 
-	ReaderThreadMain(filterbanks, readerThreadData, &configuration);
+	//ReaderThreadMain(filterbanks, readerThreadData, &configuration);
 
 
 	//Free all memory
