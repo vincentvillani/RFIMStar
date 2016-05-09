@@ -17,8 +17,11 @@
 
 #include "ReaderThreadData.h"
 #include "RFIMConfiguration.h"
+#include "MasterMailbox.h"
 
 //The reader threads 'main' function
-void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderThreadData* RTD, RFIMConfiguration* RFIMConfig);
+void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderThreadData* RTD, RFIMConfiguration* RFIMConfig,
+		MasterMailbox* masterMailbox);
+
 
 #endif /* HEADER_READERTHREAD_H_ */

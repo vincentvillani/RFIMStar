@@ -16,6 +16,7 @@ public:
 	ReaderWorkerMailbox* readerWorkerMailbox;
 
 	MasterMailbox(ReaderWorkerMailbox* RWM);
+	~MasterMailbox();
 };
 
 #endif /* HEADER_MASTERMAILBOX_H_ */

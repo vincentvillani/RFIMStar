@@ -28,6 +28,9 @@ public:
 	//As a user you should be able to ignore everything below here
 	//-------------------------------------------------------------
 
+	float* h_inputSignal;
+	uint64_t h_inputSignalBatchOffset;
+
 	//Mean working memory
 	float* h_oneVec; //A vector filled with ones, to calculate the mean
 
@@ -50,8 +53,8 @@ public:
 	uint64_t h_VTBatchOffset;
 
 
-	float* h_signal;
-	uint64_t h_signalBatchOffset;
+	float* h_outputSignal;
+	uint64_t h_outputSignalBatchOffset;
 
 
 	//Constructors

@@ -25,15 +25,20 @@ void ReaderWorkerMailbox::ReaderToWorkers_QueueRawDataBlock(RawDataBlock* rawDat
 	for(uint32_t i = 0; i < workerThreadDataVector->size(); ++i)
 	{
 
-		//Lock the the work queue mutex
-		//When the lock guard goes out of scope the mutex will be unlocked
-		std::lock_guard<std::mutex> workerQueueLockGuard( (*workerThreadDataVector)[i]->workQueueMutex );
+		{
+			//Lock the the work queue mutex
+			//When the lock guard goes out of scope the mutex will be unlocked
+			std::lock_guard<std::mutex> workerQueueLockGuard( (*workerThreadDataVector)[i]->workQueueMutex );
 
-		//Place the raw data block in the work queue
-		(*workerThreadDataVector)[i]->workQueue.push_back(rawDataBlock);
+			//Place the raw data block in the work queue
+			(*workerThreadDataVector)[i]->workQueue.push(rawDataBlock);
+
+		}
+
+		//Let the worker thread know something was placed in their queue, so they can wake up if they are currently sleeping
+		(*workerThreadDataVector)[i]->workQueueConditionVariable.notify_one();
 
 	}
-
 
 }
 

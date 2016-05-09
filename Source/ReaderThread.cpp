@@ -7,6 +7,7 @@
 
 #include "../Header/ReaderThread.h"
 
+
 #include <stdint.h>
 #include <vector>
 
@@ -14,14 +15,15 @@
 
 
 //Filterbanks are already open and ready to go
-void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderThreadData* RTD, RFIMConfiguration* RFIMConfig)
+void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderThreadData* RTD, RFIMConfiguration* RFIMConfig,
+		MasterMailbox* masterMailbox)
 {
 
 
 	uint64_t* bytesReadPerBeam = new uint64_t[RFIMConfig->beamNum];
 
 	//Figure out how many bytes we should read per filterbank each iteration
-	uint64_t bytesToReadPerFilterbank = (RFIMConfig->windowSize * RFIMConfig->channelNum * RFIMConfig->batchSize *
+	uint64_t bytesToReadPerFilterbank = (RFIMConfig->windowSize * RFIMConfig->channelNum *
 			RFIMConfig->numberOfWorkerThreads * RFIMConfig->numBitsPerSample) / 8;
 
 	//std::cout << "Bytes to read per beam: " << bytesToReadPerFilterbank << std::endl;
@@ -40,7 +42,7 @@ void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderT
 		//Do we have to wait or can we start work right away?
 		if(RTD->rawDataBlockQueue->size() == 0)
 		{
-			std::cout << "Reader thread is waiting for work..." << std::endl;
+			//std::cout << "Reader thread is waiting for work..." << std::endl;
 
 			//We have to wait for a buffer to use
 
@@ -73,7 +75,7 @@ void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderT
 			ReadFilterbankData(filterbankVector[i], currentBuffer->packedRawData + (i * bytesToReadPerFilterbank), bytesToReadPerFilterbank,
 					bytesReadPerBeam + i);
 
-			//std::cout << "Read in filterbank data: " << i << ", bytes read " << bytesReadPerBeam[i] << std::endl;
+			std::cout << "Read in filterbank data: " << i << ", bytes read " << bytesReadPerBeam[i] << std::endl;
 		}
 
 		//std::cout << "Done reading in filterbank data!" << std::endl;
@@ -93,7 +95,8 @@ void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderT
 
 
 
-		//TODO: Send it off to the worker threads
+		//Send the data off to the worker threads
+		masterMailbox->readerWorkerMailbox->ReaderToWorkers_QueueRawDataBlock(currentBuffer);
 
 	}
 

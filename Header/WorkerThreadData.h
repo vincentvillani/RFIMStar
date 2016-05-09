@@ -8,7 +8,7 @@
 #ifndef HEADER_WORKERTHREADDATA_H_
 #define HEADER_WORKERTHREADDATA_H_
 
-#include <vector>
+#include <queue>
 #include <mutex>
 #include <thread>
 #include <condition_variable>
@@ -21,7 +21,7 @@ class WorkerThreadData
 
 public:
 
-	std::vector<RawDataBlock*> workQueue;
+	std::queue<RawDataBlock*> workQueue;
 	std::mutex workQueueMutex;
 	std::condition_variable workQueueConditionVariable;
 

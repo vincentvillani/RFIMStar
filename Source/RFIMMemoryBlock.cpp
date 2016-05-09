@@ -24,6 +24,17 @@
 
 		//Setup the one vec, we use the same memory over and over again, it should never change
 		//------------------------
+
+		//Setup space for the input signal
+
+
+		uint64_t inputSignalSingleLength = h_valuesPerSample * h_numberOfSamples;
+		uint64_t inputSignalLength = inputSignalSingleLength * h_batchSize;
+
+		this->h_inputSignal = new float[inputSignalLength];
+		this->h_inputSignalBatchOffset = inputSignalSingleLength;
+
+
 		uint64_t oneVecLength = h_numberOfSamples;
 		//uint64_t oneVecByteSize = sizeof(float) * oneVecLength;
 
@@ -82,15 +93,17 @@
 		uint64_t projectedSignalSingleLength = h_valuesPerSample * h_numberOfSamples;
 		uint64_t projectedSignalLength = projectedSignalSingleLength * h_batchSize;
 		//uint64_t projectedSignalByteSize = sizeof(float) * projectedSignalLength;
-		this->h_signal = new float[projectedSignalLength];
+		this->h_outputSignal = new float[projectedSignalLength];
 
-		this->h_signalBatchOffset = projectedSignalSingleLength; //(float*)malloc(projectedSignalByteSize);
+		this->h_outputSignalBatchOffset = projectedSignalSingleLength; //(float*)malloc(projectedSignalByteSize);
 
 	}
 
 
 	RFIMMemoryBlock::~RFIMMemoryBlock()
 	{
+		delete [] this->h_inputSignal;
+
 		delete [] this->h_oneVec;
 		delete [] this->h_meanVec;
 
@@ -100,7 +113,7 @@
 		delete [] this->h_VT;
 		delete [] this->h_S;
 
-		delete [] this->h_signal;
+		delete [] this->h_outputSignal;
 
 	}
 
