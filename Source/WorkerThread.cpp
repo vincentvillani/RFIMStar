@@ -277,7 +277,7 @@ void WorkerThreadMultiplexData(RFIMMemoryBlock* rfimMemoryBlock)
 
 void WorkerThreadDeMultiplexData(RFIMMemoryBlock* rfimMemoryBlock)
 {
-	//Transpose the matrix in place to multiplex the signal correctly
+	//Transpose the matrix in place to demultiplex the signal correctly
 	//
 	/*
 	mkl_simatcopy('c', 't',
