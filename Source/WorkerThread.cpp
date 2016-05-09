@@ -135,6 +135,8 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 		RFIMConfiguration* configuration)
 {
 
+	bool shouldShutdown = false;
+
 	//Allocate space for the RFIM algorithm
 	//h_valuesPerSample = number of beams (or filterbank files)
 	//h_numberOfSamples = window size
@@ -144,7 +146,7 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 
 	//Is there any work to do?
 	//TODO: Figure out when to exit
-	while(true)
+	while(shouldShutdown == false)
 	{
 		//Lock the mutex
 		std::unique_lock<std::mutex> lockGuard(threadData->workQueueMutex);
@@ -194,11 +196,17 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 		//Pack the data
 		WorkerThreadPackData(workerThreadID, rawData, rfimMemoryBlock, configuration);
 
+		//Is this the last block we should process?
+		shouldShutdown = rawData->isLastBlock;
+
 
 		//Pass to the writer thread
+		//TODO: Implement this
 
 	}
 
+
+	std::cout << "Worker thread finishing..." << std::endl;
 
 	delete rfimMemoryBlock;
 
@@ -297,43 +305,22 @@ void WorkerThreadPackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock, R
 
 
 	uint64_t outputCharDataOffset = rfimMemoryBlock->h_numberOfSamples * rfimMemoryBlock->h_batchSize;
-	uint64_t packedDataOffset = (outputCharDataOffset * configuration->numBitsPerSample / 8);
 
 	uint64_t oneFilterbankByteSize = (rawDataBlock->usedDataLength / configuration->beamNum);
 	uint64_t threadFilterbankByteSize = (oneFilterbankByteSize / configuration->numberOfWorkerThreads);
+	uint64_t threadStartingOffset = (oneFilterbankByteSize / configuration->numberOfWorkerThreads) * workerThreadID;
 
 
-
-	//For each filterbank beam, unpack the needed data for this worker thread
+	//For each filterbank beam, pack the processed data
 	for(uint32_t i = 0; i < configuration->beamNum; ++i)
 	{
 
 		//pack data back into the filterbank format required
 		pack(outputCharData + (i * outputCharDataOffset),
-				rawDataBlock->packedRawData + (i * packedDataOffset),
+				rawDataBlock->packedRawData + (i * oneFilterbankByteSize) + threadStartingOffset,
 				configuration->numBitsPerSample, threadFilterbankByteSize);
 
 	}
-
-
-	//TODO: Remove this after
-	//Calculate the filterbank and thread offsets
-	/*
-	uint64_t oneFilterbankByteSize = (rawDataBlock->usedDataLength / configuration->beamNum);
-	uint64_t threadFilterbankByteSize = (oneFilterbankByteSize / configuration->numberOfWorkerThreads);
-	uint64_t threadStartingOffset = (oneFilterbankByteSize / configuration->numberOfWorkerThreads) * workerThreadID;
-	uint64_t outputOffset = (rfimMemoryBlock->h_numberOfSamples * rfimMemoryBlock->h_batchSize);
-	*/
-
-	//std::cout << "Number of Samples: " << rfimMemoryBlock->h_numberOfSamples << std::endl;
-	//std::cout << "Values per Sample: " << rfimMemoryBlock->h_valuesPerSample << std::endl;
-	//std::cout << "Batches: " << rfimMemoryBlock->h_batchSize << std::endl;
-	//std::cout << "Output offset: " << outputOffset << std::endl;
-
-	//std::cout << "Raw data used data length: " << rawDataBlock->usedDataLength << std::endl;
-	//std::cout << "oneFilterbankByteSize byte size: " << oneFilterbankByteSize << std::endl;
-	//std::cout << "threadFilterbankByteSize offset: " << threadFilterbankByteSize << std::endl;
-	//std::cout << "threadStaringOffset: " << threadStartingOffset << std::endl;
 
 }
 

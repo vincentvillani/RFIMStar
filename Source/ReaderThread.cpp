@@ -19,6 +19,11 @@ void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderT
 		MasterMailbox* masterMailbox)
 {
 
+	bool endOfFileReached = false;
+
+	//ID used to uniquely identify a rawdata block. Everytime a raw data block is read this value is updated so that the writing
+	//thread can write the raw data blocks back out in the correct order. The work threads can also tell whats going on
+	uint64_t currentRawDataBlockID = 0;
 
 	uint64_t* bytesReadPerBeam = new uint64_t[RFIMConfig->beamNum];
 
@@ -31,7 +36,7 @@ void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderT
 
 
 	//for all the other filterbank files
-	while(filterbankVector[0]->hasReachedEOF() == false)
+	while(endOfFileReached == false)
 	{
 
 		//std::cout << "queue size: " << RTD->rawDataBlockQueue->size() << std::endl;
@@ -92,11 +97,29 @@ void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderT
 
 		//Tell the worker threads to only process the lowest number of bytes per filterbank
 		currentBuffer->usedDataLength = lowestBytes * RFIMConfig->beamNum;
+		currentBuffer->rawDataBlockID = currentRawDataBlockID; //Set the ID number
+		currentBuffer->workerThreadsCompletedProcessing = 0; //Reset the number of worker threads that have completed processing
 
+		//Increment the raw data block ID
+		currentRawDataBlockID += 1;
+
+
+		//Did we reach the end of file for any filterbank?
+		for(uint32_t i = 0; i < filterbankVector.size(); ++i)
+		{
+			if(filterbankVector[i]->hasReachedEOF())
+			{
+				endOfFileReached = true; //The reader thread can now stop
+				currentBuffer->isLastBlock = true; //Notify things down stream that this is the last block
+				break;
+			}
+		}
 
 
 		//Send the data off to the worker threads
 		masterMailbox->readerWorkerMailbox->ReaderToWorkers_QueueRawDataBlock(currentBuffer);
+
+
 
 	}
 

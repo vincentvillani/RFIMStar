@@ -18,7 +18,8 @@
 #include "Header/ReaderThread.h"
 #include "Header/WorkerThread.h"
 
-
+//TODO: Pass processed data blocks to the writing threads
+//TODO: Write a unit test that tests that the packing/unpacking works with no RFIM being done and the filterbank files are unchanged
 //TODO: Add the ability to read in and write out different nbit values
 //TODO: Calculate how many dimensions to reduce at run-time, rather than a hardcoded 1
 //TODO: Pass the message down from the reader thread that the last raw data block has been read and that after processing it the other threads can shut down
