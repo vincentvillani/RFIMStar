@@ -201,7 +201,7 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 
 
 		//Pass to the writer thread
-		//TODO: Implement this
+		masterMailbox->workerWriterMailbox->Worker_NotifyFinishedWithBlock(rawData);
 
 	}
 

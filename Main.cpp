@@ -17,6 +17,7 @@
 
 #include "Header/ReaderThread.h"
 #include "Header/WorkerThread.h"
+#include "Header/WriterThread.h"
 
 //TODO: Pass processed data blocks to the writing threads
 //TODO: Write a unit test that tests that the packing/unpacking works with no RFIM being done and the filterbank files are unchanged
@@ -32,37 +33,49 @@ int main()
 	//"/Users/vincentvillani/Desktop/FilterbankFiles/2016-01-05-12:07:06/"
 	std::string filenamePrefix = "/Users/vincentvillani/Desktop/FilterbankFiles/2016-01-05-12:07:06/";
 	std::string filenamePostfix = "/2016-01-05-12:07:06.fil";
-	std::stringstream ss;
+	std::stringstream ssInputFilterbankFile;
+	std::stringstream ssOutputFilterbankFile;
 
 	uint32_t workerThreads = 1;
 	uint32_t windowSize = 15625;
 	//uint32_t channelNum = 1024;
 	uint32_t beamNum = 2;
-	uint32_t numberOfRawDataBlocks = 100000;
+	uint32_t numberOfRawDataBlocks = 5;
 
 
 	//Open the filterbanks
 	std::vector<SigprocFilterbank*> filterbanks;
+	std::vector<SigprocFilterbankOutput*> outputFilterbanks;
 
 	for(uint32_t i = 1; i < beamNum + 1; ++i)
 	{
-		ss << filenamePrefix;
+		ssInputFilterbankFile << filenamePrefix;
 
 		if(i < 10)
-			ss << "0" << i;
+		{
+			ssInputFilterbankFile << "0" << i;
+			ssOutputFilterbankFile << "0" << i;
+		}
 		else
-			ss << i;
+		{
+			ssInputFilterbankFile << i;
+			ssOutputFilterbankFile << i;
+		}
 
-		ss << filenamePostfix;
+		ssInputFilterbankFile << filenamePostfix;
+		ssOutputFilterbankFile << filenamePostfix;
 
-		//Open the filterbank file
-		SigprocFilterbank* filterbankFile = new SigprocFilterbank(ss.str());
+		//Open the input and output filterbank file
+		SigprocFilterbank* filterbankFile = new SigprocFilterbank(ssInputFilterbankFile.str());
+		SigprocFilterbankOutput* outputFilterbankFile = new SigprocFilterbankOutput(ssInputFilterbankFile.str(), ssOutputFilterbankFile.str());
 
-		//Add it to the vector
+		//Add it to the vectors
 		filterbanks.push_back(filterbankFile);
+		outputFilterbanks.push_back(outputFilterbankFile);
 
 		//Reset the string stream for the next iteration
-		ss.str("");
+		ssInputFilterbankFile.str("");
+		ssOutputFilterbankFile.str("");
 
 	}
 
@@ -89,17 +102,24 @@ int main()
 
 	//Reader and worker thread data objects
 	ReaderThreadData* readerThreadData = new ReaderThreadData(&rawDataBlockVector);
+
 	std::vector<WorkerThreadData*> workerThreadDataVector;
 	for(uint32_t i = 0; i < configuration.numberOfWorkerThreads; ++i)
 	{
 		workerThreadDataVector.push_back(new WorkerThreadData());
 	}
 
+	WriterThreadData* writerThreadData = new WriterThreadData(outputFilterbanks);
+
+
 	//individual mailboxes
 	ReaderWorkerMailbox* readerWorkerMailbox = new ReaderWorkerMailbox(readerThreadData, &workerThreadDataVector);
+	WorkerWriterMailbox* workerWriterMailbox = new WorkerWriterMailbox(writerThreadData, &configuration);
+
 
 	//Master mailbox
-	MasterMailbox* masterMailbox = new MasterMailbox(readerWorkerMailbox);
+	MasterMailbox* masterMailbox = new MasterMailbox(readerWorkerMailbox, workerWriterMailbox);
+
 
 	//Start threads
 	//Reading thread
@@ -112,7 +132,8 @@ int main()
 		workerThreadVector.push_back(new std::thread(WorkerThreadMain, i, workerThreadDataVector[i], masterMailbox, &configuration));
 	}
 
-
+	//Start the writer thread
+	std::thread writerThread(WriterThreadMain, writerThreadData, &configuration, masterMailbox);
 
 	//Wait till should exit is set (join with all created threads?)
 	readingThread.join();
@@ -120,6 +141,7 @@ int main()
 	{
 		workerThreadVector[i]->join();
 	}
+	writerThread.join();
 
 
 	//Free all memory
@@ -129,6 +151,7 @@ int main()
 	for(uint32_t i = 0; i < filterbanks.size(); ++i)
 	{
 		delete filterbanks[i];
+		delete outputFilterbanks[i];
 	}
 
 	//Raw data blocks
@@ -144,10 +167,12 @@ int main()
 		delete workerThreadDataVector[i]; //Worker data
 		delete workerThreadVector[i]; //Worker std::threads
 	}
+	delete writerThreadData;
 
 
 	//Mailboxes
 	delete readerWorkerMailbox;
+	delete workerWriterMailbox;
 	delete masterMailbox;
 
 

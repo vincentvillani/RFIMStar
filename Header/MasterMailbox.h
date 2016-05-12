@@ -9,13 +9,15 @@
 #define HEADER_MASTERMAILBOX_H_
 
 #include "ReaderWorkerMailbox.h"
+#include "WorkerWriterMailbox.h"
 
 class MasterMailbox
 {
 public:
 	ReaderWorkerMailbox* readerWorkerMailbox;
+	WorkerWriterMailbox* workerWriterMailbox;
 
-	MasterMailbox(ReaderWorkerMailbox* RWM);
+	MasterMailbox(ReaderWorkerMailbox* RWM, WorkerWriterMailbox* workerWriterMailbox);
 	~MasterMailbox();
 };
 
