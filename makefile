@@ -13,4 +13,4 @@ release:
 
 
 clean:
-	rm debug.out release.out
+	rm *.out

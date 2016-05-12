@@ -49,7 +49,7 @@ void WriterThreadMain(WriterThreadData* writerThreadData, RFIMConfiguration* con
 		//We didn't find anything to do, wait for something to do.
 		if(currentRawDataBlock == NULL)
 		{
-			//std::cout << "WriterThread: Waiting for work to do..." << std::endl;
+			std::cout << "WriterThread: Waiting for work to do..." << std::endl;
 
 			//Wait for work to do
 			writerThreadData->writeDataQueueConditionVariable.wait(workQueueLock, [&]
@@ -87,8 +87,8 @@ void WriterThreadMain(WriterThreadData* writerThreadData, RFIMConfiguration* con
 		uint64_t bytesToWritePerFilterbank = currentRawDataBlock->usedDataLength / configuration->beamNum;
 
 
-		if(currentRawDataBlock->isLastBlock)
-			std::cout << "Last block is writing " << bytesToWritePerFilterbank * configuration->beamNum << "bytes..." << std::endl;
+		//if(currentRawDataBlock->isLastBlock)
+		std::cout << "Block is writing " << bytesToWritePerFilterbank * configuration->beamNum << " bytes..." << std::endl;
 
 		//std::cout << "WriterThread: Writing data..." << std::endl;
 

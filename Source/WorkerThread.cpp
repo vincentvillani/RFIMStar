@@ -281,7 +281,7 @@ void WorkerThreadMultiplexData(RFIMMemoryBlock* rfimMemoryBlock, RFIMConfigurati
 
 	#ifdef BUILD_WITH_MKL
 	mkl_simatcopy('c', 't',
-			rfimMemoryBlock->h_valuesPerSample, configuration->windowSize * rfimMemoryBlock->h_batchSize,
+			configuration->windowSize * rfimMemoryBlock->h_batchSize, rfimMemoryBlock->h_valuesPerSample,
 			1.0f, rfimMemoryBlock->h_inputSignal,
 			configuration->windowSize * rfimMemoryBlock->h_batchSize,
 			rfimMemoryBlock->h_valuesPerSample);
@@ -301,7 +301,7 @@ void WorkerThreadDeMultiplexData(RFIMMemoryBlock* rfimMemoryBlock, RFIMConfigura
 
 	#ifdef BUILD_WITH_MKL
 	mkl_simatcopy('c', 't',
-			configuration->windowSize * rfimMemoryBlock->h_batchSize, rfimMemoryBlock->h_valuesPerSample,
+			rfimMemoryBlock->h_valuesPerSample, configuration->windowSize * rfimMemoryBlock->h_batchSize,
 			1.0f, rfimMemoryBlock->h_outputSignal,
 			rfimMemoryBlock->h_valuesPerSample,
 			configuration->windowSize * rfimMemoryBlock->h_batchSize);
