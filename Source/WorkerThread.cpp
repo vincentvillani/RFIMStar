@@ -185,8 +185,12 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 
 		//Run RFIM
 		//TODO: ADD THIS. FOR NOW JUST DO A MEMCOPY OF THE DATA FROM INPUT TO OUTPUT
-		uint64_t totalSignalByteSize = sizeof(float) * rfimMemoryBlock->h_valuesPerSample * rfimMemoryBlock->h_numberOfSamples *
-				rfimMemoryBlock->h_batchSize;
+		//uint64_t totalSignalByteSize = sizeof(float) * rfimMemoryBlock->h_valuesPerSample * rfimMemoryBlock->h_numberOfSamples *
+		//		rfimMemoryBlock->h_batchSize;
+
+		//COPY ALL DATA OVER REGARDLESS IF IT IS USED OR NOT?
+		uint64_t totalSignalByteSize = sizeof(float) * rfimMemoryBlock->h_valuesPerSample * configuration->windowSize *
+					rfimMemoryBlock->h_batchSize;
 		memcpy(rfimMemoryBlock->h_outputSignal, rfimMemoryBlock->h_inputSignal, totalSignalByteSize);
 
 
@@ -217,6 +221,8 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 void WorkerThreadUnpackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock, RFIMMemoryBlock* rfimMemoryBlock,
 		RFIMConfiguration* configuration)
 {
+
+
 	//Calculate the window size (AKA number of samples in RFIMStar jargon) of this iteration, most of the time it will always be the same, unless we are at the end of the
 	//filterbank files
 	rfimMemoryBlock->h_numberOfSamples = (8 * (rawDataBlock->usedDataLength / configuration->beamNum)) /
@@ -297,6 +303,7 @@ void WorkerThreadPackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock, R
 	unsigned char* outputCharData = (unsigned char*)rfimMemoryBlock->h_inputSignal;
 
 	//Interpret the output data as chars
+	//TODO: add this back? rfimMemoryBlock->h_numberOfSamples instead of
 	uint64_t totalSignalLength = rfimMemoryBlock->h_valuesPerSample * rfimMemoryBlock->h_numberOfSamples * rfimMemoryBlock->h_batchSize;
 	for(uint64_t i = 0; i < totalSignalLength; ++i)
 	{

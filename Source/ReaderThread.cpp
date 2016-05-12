@@ -80,11 +80,10 @@ void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderT
 			ReadFilterbankData(filterbankVector[i], currentBuffer->packedRawData + (i * bytesToReadPerFilterbank), bytesToReadPerFilterbank,
 					bytesReadPerBeam + i);
 
-			std::cout << "Read in filterbank data: " << i << ", bytes read " << bytesReadPerBeam[i] << std::endl;
+			//std::cout << "Read in filterbank data: " << i << ", bytes read " << bytesReadPerBeam[i] << std::endl;
 		}
 
 		//std::cout << "Done reading in filterbank data!" << std::endl;
-
 
 
 		//find the lowest number of bytes read
@@ -95,13 +94,15 @@ void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderT
 				lowestBytes = bytesReadPerBeam[i];
 		}
 
+
 		//Tell the worker threads to only process the lowest number of bytes per filterbank
+		//currentBuffer->usedDataLength = bytesToReadPerFilterbank * RFIMConfig->beamNum;
 		currentBuffer->usedDataLength = lowestBytes * RFIMConfig->beamNum;
 		currentBuffer->rawDataBlockID = currentRawDataBlockID; //Set the ID number
 		currentBuffer->workerThreadsCompletedProcessing = 0; //Reset the number of worker threads that have completed processing
 
-		//Increment the raw data block ID
 		currentRawDataBlockID += 1;
+
 
 
 		//Did we reach the end of file for any filterbank?
