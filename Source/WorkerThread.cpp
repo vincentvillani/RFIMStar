@@ -11,6 +11,10 @@
 #include <math.h>
 #include <string.h>
 
+#ifdef BUILD_WITH_MKL
+#include <mkl.h>
+#include <mkl_trans.h>
+#endif
 
 
 //Private worker functions
@@ -180,7 +184,7 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 
 
 		//Multiplex the data
-		WorkerThreadMultiplexData(rfimMemoryBlock);
+		WorkerThreadMultiplexData(rfimMemoryBlock, configuration);
 
 
 		//Calculate the window size (AKA number of samples in RFIMStar jargon) of this iteration,
@@ -203,7 +207,7 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 
 
 		//De-Multiplex the data
-		WorkerThreadDeMultiplexData(rfimMemoryBlock);
+		WorkerThreadDeMultiplexData(rfimMemoryBlock, configuration);
 
 		//Pack the data
 		WorkerThreadPackData(workerThreadID, rawData, rfimMemoryBlock, configuration);
@@ -270,31 +274,38 @@ void WorkerThreadUnpackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock,
 
 
 
-void WorkerThreadMultiplexData(RFIMMemoryBlock* rfimMemoryBlock)
+void WorkerThreadMultiplexData(RFIMMemoryBlock* rfimMemoryBlock, RFIMConfiguration* configuration)
 {
 	//Transpose the matrix in place to multiplex the signal correctly
 	//
-	/*
+
+	#ifdef BUILD_WITH_MKL
 	mkl_simatcopy('c', 't',
-			rfimMemoryBlock->h_numberOfSamples * rfimMemoryBlock->h_batchSize, rfimMemoryBlock->h_valuesPerSample,
-			rfimMemoryBlock->h_inputSignal, 1.0f, rfimMemoryBlock->h_numberOfSamples * rfimMemoryBlock->h_batchSize,
+			rfimMemoryBlock->h_valuesPerSample, configuration->windowSize * rfimMemoryBlock->h_batchSize,
+			1.0f, rfimMemoryBlock->h_inputSignal,
+			configuration->windowSize * rfimMemoryBlock->h_batchSize,
 			rfimMemoryBlock->h_valuesPerSample);
-	*/
+	#endif
+
+
+
 
 
 }
 
 
-void WorkerThreadDeMultiplexData(RFIMMemoryBlock* rfimMemoryBlock)
+void WorkerThreadDeMultiplexData(RFIMMemoryBlock* rfimMemoryBlock, RFIMConfiguration* configuration)
 {
 	//Transpose the matrix in place to demultiplex the signal correctly
 	//
-	/*
+
+	#ifdef BUILD_WITH_MKL
 	mkl_simatcopy('c', 't',
-			rfimMemoryBlock->h_valuesPerSample, rfimMemoryBlock->h_numberOfSamples * rfimMemoryBlock->h_batchSize,
-			rfimMemoryBlock->h_outputSignal, 1.0f, rfimMemoryBlock->h_valuesPerSample,
-			rfimMemoryBlock->h_numberOfSamples * rfimMemoryBlock->h_batchSize);
-	*/
+			configuration->windowSize * rfimMemoryBlock->h_batchSize, rfimMemoryBlock->h_valuesPerSample,
+			1.0f, rfimMemoryBlock->h_outputSignal,
+			rfimMemoryBlock->h_valuesPerSample,
+			configuration->windowSize * rfimMemoryBlock->h_batchSize);
+	#endif
 }
 
 

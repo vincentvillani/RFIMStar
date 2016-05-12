@@ -9,6 +9,7 @@
 
 #include "Header/UnitTests.h"
 
+//TODO: THE WORKER THREADS SHOULD ONLY MULTIPLEX THERE OWN PORTION OF THE DATA!
 //TODO: Add the multiplexing with MKL
 //TODO: Write a unit test to test that the multiplexing with MKL actually works
 //TODO: Actually add the RFIM routine

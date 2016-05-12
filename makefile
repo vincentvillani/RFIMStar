@@ -1,4 +1,4 @@
-CC_FLAGS=-DMKL_ILP64 -m64
+CC_FLAGS=-DMKL_ILP64 -m64 -DBUILD_WITH_MKL
 LIBS=-lmkl_intel_ilp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
 DEBUG_FLAGS=-g3 -O0 -std=c++11
 RELEASE_FLAGS=-O3 -std=c++11

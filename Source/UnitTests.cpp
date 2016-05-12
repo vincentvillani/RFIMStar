@@ -25,9 +25,9 @@ void RunAllUniTests()
 //The input and output filterbank files should be identical
 void PackingUnpackingUnitTest()
 {
-	uint32_t beamNum = 13;
+	uint32_t beamNum = 1;
 	uint32_t rawDataBlockNum = 10;
-	uint32_t numberOfWorkerThreads = 10;
+	uint32_t numberOfWorkerThreads = 14;
 	uint32_t windowSize = 15625;
 
 	std::string inputFilenamePrefix = "/lustre/projects/p002_swin/surveys/SUPERB/2016-01-05-12:07:06/";
