@@ -9,8 +9,8 @@
 
 #include "Header/UnitTests.h"
 
-//TODO: Move the h_numberOfSamples calculation into the middle of the worker thread loop so it's more visible
-//TODO: Write a unit test that tests that the packing/unpacking works with no RFIM being done and the filterbank files are unchanged
+//TODO: Add the multiplexing with MKL
+//TODO: Write a unit test to test that the multiplexing with MKL actually works
 //TODO: Actually add the RFIM routine
 //TODO: Add the ability to read in and write out different nbit values
 //TODO: Calculate how many dimensions to reduce at run-time, rather than a hardcoded 1

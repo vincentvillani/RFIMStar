@@ -27,13 +27,13 @@ void PackingUnpackingUnitTest()
 {
 	uint32_t beamNum = 13;
 	uint32_t rawDataBlockNum = 10;
-	uint32_t numberOfWorkerThreads = 2;
+	uint32_t numberOfWorkerThreads = 10;
 	uint32_t windowSize = 15625;
 
-	std::string inputFilenamePrefix = "/Users/vincentvillani/Desktop/FilterbankFiles/2016-01-05-12:07:06/";
+	std::string inputFilenamePrefix = "/lustre/projects/p002_swin/surveys/SUPERB/2016-01-05-12:07:06/";
 	std::string inputFilenamePostfix = "/2016-01-05-12:07:06.fil";
 
-	std::string outputFilenamePrefix = "/Users/vincentvillani/Desktop/OutputFilterbankFiles/";
+	std::string outputFilenamePrefix = "/lustre/projects/p002_swin/vvillani/";
 	std::string outputFilenamePostfix = ".fil";
 
 	RFIMConfiguration configuration = RFIMConfiguration(numberOfWorkerThreads, windowSize, beamNum, rawDataBlockNum,
