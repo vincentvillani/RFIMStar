@@ -8,10 +8,11 @@
 #include "../Header/MasterMailbox.h"
 
 
-MasterMailbox::MasterMailbox(ReaderWorkerMailbox* RWM, WorkerWriterMailbox* workerWriterMailbox)
+MasterMailbox::MasterMailbox(ReaderWorkerMailbox* RWM, WorkerWriterMailbox* workerWriterMailbox, WriterReaderMailbox* writerReaderMailbox)
 {
 	this->readerWorkerMailbox = RWM;
 	this->workerWriterMailbox = workerWriterMailbox;
+	this->writerReaderMailbox = writerReaderMailbox;
 }
 
 

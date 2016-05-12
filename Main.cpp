@@ -19,8 +19,8 @@
 #include "Header/WorkerThread.h"
 #include "Header/WriterThread.h"
 
-//TODO: Pass processed data blocks to the writing threads
 //TODO: Write a unit test that tests that the packing/unpacking works with no RFIM being done and the filterbank files are unchanged
+//TODO: Actually add the RFIM routine
 //TODO: Add the ability to read in and write out different nbit values
 //TODO: Calculate how many dimensions to reduce at run-time, rather than a hardcoded 1
 //TODO: Pass the message down from the reader thread that the last raw data block has been read and that after processing it the other threads can shut down
@@ -36,11 +36,11 @@ int main()
 	std::stringstream ssInputFilterbankFile;
 	std::stringstream ssOutputFilterbankFile;
 
-	uint32_t workerThreads = 1;
+	uint32_t workerThreads = 2;
 	uint32_t windowSize = 15625;
 	//uint32_t channelNum = 1024;
 	uint32_t beamNum = 2;
-	uint32_t numberOfRawDataBlocks = 5;
+	uint32_t numberOfRawDataBlocks = 10;
 
 
 	//Open the filterbanks
@@ -54,16 +54,16 @@ int main()
 		if(i < 10)
 		{
 			ssInputFilterbankFile << "0" << i;
-			ssOutputFilterbankFile << "0" << i;
+			ssOutputFilterbankFile << "0" << i << ".fil";
 		}
 		else
 		{
 			ssInputFilterbankFile << i;
-			ssOutputFilterbankFile << i;
+			ssOutputFilterbankFile << i << ".fil";
 		}
 
 		ssInputFilterbankFile << filenamePostfix;
-		ssOutputFilterbankFile << filenamePostfix;
+		//ssOutputFilterbankFile << filenamePostfix;
 
 		//Open the input and output filterbank file
 		SigprocFilterbank* filterbankFile = new SigprocFilterbank(ssInputFilterbankFile.str());
@@ -115,10 +115,10 @@ int main()
 	//individual mailboxes
 	ReaderWorkerMailbox* readerWorkerMailbox = new ReaderWorkerMailbox(readerThreadData, &workerThreadDataVector);
 	WorkerWriterMailbox* workerWriterMailbox = new WorkerWriterMailbox(writerThreadData, &configuration);
-
+	WriterReaderMailbox* writerReaderMailbox = new WriterReaderMailbox(readerThreadData);
 
 	//Master mailbox
-	MasterMailbox* masterMailbox = new MasterMailbox(readerWorkerMailbox, workerWriterMailbox);
+	MasterMailbox* masterMailbox = new MasterMailbox(readerWorkerMailbox, workerWriterMailbox, writerReaderMailbox);
 
 
 	//Start threads
@@ -173,6 +173,7 @@ int main()
 	//Mailboxes
 	delete readerWorkerMailbox;
 	delete workerWriterMailbox;
+	delete writerReaderMailbox;
 	delete masterMailbox;
 
 

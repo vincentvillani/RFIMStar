@@ -10,14 +10,16 @@
 
 #include "ReaderWorkerMailbox.h"
 #include "WorkerWriterMailbox.h"
+#include "WriterReaderMailbox.h"
 
 class MasterMailbox
 {
 public:
 	ReaderWorkerMailbox* readerWorkerMailbox;
 	WorkerWriterMailbox* workerWriterMailbox;
+	WriterReaderMailbox* writerReaderMailbox;
 
-	MasterMailbox(ReaderWorkerMailbox* RWM, WorkerWriterMailbox* workerWriterMailbox);
+	MasterMailbox(ReaderWorkerMailbox* RWM, WorkerWriterMailbox* workerWriterMailbox, WriterReaderMailbox* writerReaderMailbox);
 	~MasterMailbox();
 };
 

@@ -49,6 +49,8 @@ void WriterThreadMain(WriterThreadData* writerThreadData, RFIMConfiguration* con
 		//We didn't find anything to do, wait for something to do.
 		if(currentRawDataBlock == NULL)
 		{
+			std::cout << "WriterThread: Waiting for work to do..." << std::endl;
+
 			//Wait for work to do
 			writerThreadData->writeDataQueueConditionVariable.wait(workQueueLock, [&]
 			{
@@ -67,6 +69,8 @@ void WriterThreadMain(WriterThreadData* writerThreadData, RFIMConfiguration* con
 			});
 
 
+			std::cout << "WriterThread: Woken up!" << std::endl;
+
 			//At this point we have the lock again
 			//Get the current raw data block out of the workQueue
 			currentRawDataBlock = findWork(writerThreadData, configuration, currentBlockID);
@@ -78,15 +82,17 @@ void WriterThreadMain(WriterThreadData* writerThreadData, RFIMConfiguration* con
 		workQueueLock.unlock();
 
 
-		//TODO: Write out the data
-		uint64_t bytesToWritePerThread = currentRawDataBlock->usedDataLength / configuration->numberOfWorkerThreads;
+		//Write out the data
+		uint64_t bytesToWritePerFilterbank = currentRawDataBlock->usedDataLength / configuration->beamNum;
+
+		std::cout << "WriterThread: Writing data..." << std::endl;
 
 		for(uint32_t i = 0; i < writerThreadData->filterbankOutputVector.size(); ++i)
 		{
 			SigprocFilterbankOutput* currentFilterbank = writerThreadData->filterbankOutputVector[i];
 
-			WriteSigprocOutputFile(currentFilterbank, currentRawDataBlock->packedRawData + (i* bytesToWritePerThread),
-					bytesToWritePerThread);
+			WriteSigprocOutputFile(currentFilterbank, currentRawDataBlock->packedRawData + (i* bytesToWritePerFilterbank),
+					bytesToWritePerFilterbank);
 		}
 
 
@@ -95,8 +101,8 @@ void WriterThreadMain(WriterThreadData* writerThreadData, RFIMConfiguration* con
 		currentBlockID += 1;
 
 
-		//TODO: Pass this rawDataBlock back to the reader thread
-
+		//Pass this rawDataBlock back to the reader thread
+		masterMailbox->writerReaderMailbox->Writer_PassRawDataBlockToReaderThread(currentRawDataBlock);
 
 
 	}
