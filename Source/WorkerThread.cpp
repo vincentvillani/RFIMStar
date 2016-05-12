@@ -203,7 +203,7 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 		//COPY ALL DATA OVER REGARDLESS IF IT IS USED OR NOT?
 		uint64_t totalSignalByteSize = sizeof(float) * rfimMemoryBlock->h_valuesPerSample * configuration->windowSize *
 					rfimMemoryBlock->h_batchSize;
-		memcpy(rfimMemoryBlock->h_outputSignal, rfimMemoryBlock->h_inputSignal, totalSignalByteSize);
+		memcpy(rfimMemoryBlock->h_inputSignal, rfimMemoryBlock->h_outputSignal, totalSignalByteSize);
 
 
 		//De-Multiplex the data
@@ -280,11 +280,10 @@ void WorkerThreadMultiplexData(RFIMMemoryBlock* rfimMemoryBlock, RFIMConfigurati
 	//
 
 	#ifdef BUILD_WITH_MKL
-	mkl_simatcopy('c', 't',
+	mkl_somatcopy('c', 't',
 			configuration->windowSize * rfimMemoryBlock->h_batchSize, rfimMemoryBlock->h_valuesPerSample,
-			1.0f, rfimMemoryBlock->h_inputSignal,
-			configuration->windowSize * rfimMemoryBlock->h_batchSize,
-			rfimMemoryBlock->h_valuesPerSample);
+			1.0f, rfimMemoryBlock->h_inputSignal, configuration->windowSize * rfimMemoryBlock->h_batchSize,
+			rfimMemoryBlock->h_outputSignal, rfimMemoryBlock->h_valuesPerSample);
 	#endif
 
 
@@ -300,11 +299,10 @@ void WorkerThreadDeMultiplexData(RFIMMemoryBlock* rfimMemoryBlock, RFIMConfigura
 	//
 
 	#ifdef BUILD_WITH_MKL
-	mkl_simatcopy('c', 't',
+	mkl_somatcopy('c', 't',
 			rfimMemoryBlock->h_valuesPerSample, configuration->windowSize * rfimMemoryBlock->h_batchSize,
-			1.0f, rfimMemoryBlock->h_outputSignal,
-			rfimMemoryBlock->h_valuesPerSample,
-			configuration->windowSize * rfimMemoryBlock->h_batchSize);
+			1.0f, rfimMemoryBlock->h_outputSignal, rfimMemoryBlock->h_valuesPerSample,
+			rfimMemoryBlock->h_inputSignal, configuration->windowSize * rfimMemoryBlock->h_batchSize);
 	#endif
 }
 
@@ -315,14 +313,14 @@ void WorkerThreadPackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock, R
 {
 
 	//use the input signal data as a buffer to convert the outputSignal floats into unsigned chars
-	unsigned char* outputCharData = (unsigned char*)rfimMemoryBlock->h_inputSignal;
+	unsigned char* outputCharData = (unsigned char*)rfimMemoryBlock->h_outputSignal;
 
 	//Interpret the output data as chars
 	//TODO: add this back? rfimMemoryBlock->h_numberOfSamples instead of configuration->windowSize
 	uint64_t totalSignalLength = rfimMemoryBlock->h_valuesPerSample * configuration->windowSize * rfimMemoryBlock->h_batchSize;
 	for(uint64_t i = 0; i < totalSignalLength; ++i)
 	{
-		outputCharData[i] = (unsigned char)rfimMemoryBlock->h_outputSignal[i];
+		outputCharData[i] = (unsigned char)rfimMemoryBlock->h_inputSignal[i];
 	}
 
 
