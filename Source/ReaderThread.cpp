@@ -80,7 +80,6 @@ void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderT
 			ReadFilterbankData(filterbankVector[i], currentBuffer->packedRawData + (i * bytesToReadPerFilterbank), bytesToReadPerFilterbank,
 					bytesReadPerBeam + i);
 
-			//std::cout << "Read in filterbank data: " << i << ", bytes read " << bytesReadPerBeam[i] << std::endl;
 		}
 
 		//std::cout << "Done reading in filterbank data!" << std::endl;
@@ -114,7 +113,12 @@ void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderT
 				currentBuffer->isLastBlock = true; //Notify things down stream that this is the last block
 				break;
 			}
+
+
 		}
+
+		if(currentBuffer->isLastBlock)
+			std::cout << "last block is using " << currentBuffer->usedDataLength << "bytes..." << std::endl;
 
 
 		//Send the data off to the worker threads

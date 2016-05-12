@@ -83,7 +83,12 @@ void WriterThreadMain(WriterThreadData* writerThreadData, RFIMConfiguration* con
 
 
 		//Write out the data
+		uint64_t filterbankOffset = currentRawDataBlock->totalDataLength / configuration->beamNum;
 		uint64_t bytesToWritePerFilterbank = currentRawDataBlock->usedDataLength / configuration->beamNum;
+
+
+		if(currentRawDataBlock->isLastBlock)
+			std::cout << "Last block is writing " << bytesToWritePerFilterbank * configuration->beamNum << "bytes..." << std::endl;
 
 		//std::cout << "WriterThread: Writing data..." << std::endl;
 
@@ -91,7 +96,7 @@ void WriterThreadMain(WriterThreadData* writerThreadData, RFIMConfiguration* con
 		{
 			SigprocFilterbankOutput* currentFilterbank = writerThreadData->filterbankOutputVector[i];
 
-			WriteSigprocOutputFile(currentFilterbank, currentRawDataBlock->packedRawData + (i * bytesToWritePerFilterbank),
+			WriteSigprocOutputFile(currentFilterbank, currentRawDataBlock->packedRawData + (i * filterbankOffset),
 					bytesToWritePerFilterbank);
 		}
 

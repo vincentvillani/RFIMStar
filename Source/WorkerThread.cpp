@@ -183,6 +183,14 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 		WorkerThreadMultiplexData(rfimMemoryBlock);
 
 
+		//Calculate the window size (AKA number of samples in RFIMStar jargon) of this iteration,
+		//most of the time it will always be the same, unless we are at the end of the
+		//filterbank files
+		//This is so when we do RFIM we ignore samples that don't exist as we reach near the end of a file
+		rfimMemoryBlock->h_numberOfSamples = (8 * (rawData->usedDataLength / configuration->beamNum)) /
+				(configuration->channelNum * configuration->numberOfWorkerThreads * configuration->numBitsPerSample);
+
+
 		//Run RFIM
 		//TODO: ADD THIS. FOR NOW JUST DO A MEMCOPY OF THE DATA FROM INPUT TO OUTPUT
 		//uint64_t totalSignalByteSize = sizeof(float) * rfimMemoryBlock->h_valuesPerSample * rfimMemoryBlock->h_numberOfSamples *
@@ -223,18 +231,14 @@ void WorkerThreadUnpackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock,
 {
 
 
-	//Calculate the window size (AKA number of samples in RFIMStar jargon) of this iteration, most of the time it will always be the same, unless we are at the end of the
-	//filterbank files
-	rfimMemoryBlock->h_numberOfSamples = (8 * (rawDataBlock->usedDataLength / configuration->beamNum)) /
-			(configuration->channelNum * configuration->numberOfWorkerThreads * configuration->numBitsPerSample);
-
-
 
 	//Calculate the filterbank and thread offsets
-	uint64_t oneFilterbankByteSize = (rawDataBlock->usedDataLength / configuration->beamNum);
+	//uint64_t oneFilterbankByteSize = (rawDataBlock->usedDataLength / configuration->beamNum);
+	uint64_t oneFilterbankByteSize = (rawDataBlock->totalDataLength / configuration->beamNum);
 	uint64_t threadFilterbankByteSize = (oneFilterbankByteSize / configuration->numberOfWorkerThreads);
 	uint64_t threadStartingOffset = (oneFilterbankByteSize / configuration->numberOfWorkerThreads) * workerThreadID;
-	uint64_t outputOffset = (rfimMemoryBlock->h_numberOfSamples * rfimMemoryBlock->h_batchSize);
+	uint64_t outputOffset = (configuration->windowSize * rfimMemoryBlock->h_batchSize);
+	//uint64_t outputOffset = (rfimMemoryBlock->h_numberOfSamples * rfimMemoryBlock->h_batchSize);
 
 	//std::cout << "Number of Samples: " << rfimMemoryBlock->h_numberOfSamples << std::endl;
 	//std::cout << "Values per Sample: " << rfimMemoryBlock->h_valuesPerSample << std::endl;
@@ -303,17 +307,27 @@ void WorkerThreadPackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock, R
 	unsigned char* outputCharData = (unsigned char*)rfimMemoryBlock->h_inputSignal;
 
 	//Interpret the output data as chars
-	//TODO: add this back? rfimMemoryBlock->h_numberOfSamples instead of
-	uint64_t totalSignalLength = rfimMemoryBlock->h_valuesPerSample * rfimMemoryBlock->h_numberOfSamples * rfimMemoryBlock->h_batchSize;
+	//TODO: add this back? rfimMemoryBlock->h_numberOfSamples instead of configuration->windowSize
+	uint64_t totalSignalLength = rfimMemoryBlock->h_valuesPerSample * configuration->windowSize * rfimMemoryBlock->h_batchSize;
 	for(uint64_t i = 0; i < totalSignalLength; ++i)
 	{
 		outputCharData[i] = (unsigned char)rfimMemoryBlock->h_outputSignal[i];
 	}
 
 
-	uint64_t outputCharDataOffset = rfimMemoryBlock->h_numberOfSamples * rfimMemoryBlock->h_batchSize;
+	/*
+	 * 	uint64_t oneFilterbankByteSize = (rawDataBlock->totalDataLength / configuration->beamNum);
+		uint64_t threadFilterbankByteSize = (oneFilterbankByteSize / configuration->numberOfWorkerThreads);
+		uint64_t threadStartingOffset = (oneFilterbankByteSize / configuration->numberOfWorkerThreads) * workerThreadID;
+		uint64_t outputOffset = (configuration->windowSize * rfimMemoryBlock->h_batchSize);
+	 *
+	 */
 
-	uint64_t oneFilterbankByteSize = (rawDataBlock->usedDataLength / configuration->beamNum);
+	//rfimMemoryBlock->h_numberOfSamples instead of configuration->windowSize
+	uint64_t outputCharDataOffset = configuration->windowSize * rfimMemoryBlock->h_batchSize;
+
+	//rawDataBlock->usedDataLength instead of rawDataBlock->totalDataLength
+	uint64_t oneFilterbankByteSize = (rawDataBlock->totalDataLength / configuration->beamNum);
 	uint64_t threadFilterbankByteSize = (oneFilterbankByteSize / configuration->numberOfWorkerThreads);
 	uint64_t threadStartingOffset = (oneFilterbankByteSize / configuration->numberOfWorkerThreads) * workerThreadID;
 
