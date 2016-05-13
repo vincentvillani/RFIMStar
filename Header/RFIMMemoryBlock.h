@@ -55,8 +55,8 @@ public:
 	//uint64_t h_VTBatchOffset;
 
 	//Swaps the columns of the eigenvector matrix so its highest to lowest
-	float* h_eigenvectorColumnSwapperMatrix;
-	uint32_t h_eigenVectorColumnSwapperMatrixLength;
+	//float* h_eigenvectorColumnSwapperMatrix;
+	//uint32_t h_eigenVectorColumnSwapperMatrixLength;
 
 
 	float* h_outputSignal;

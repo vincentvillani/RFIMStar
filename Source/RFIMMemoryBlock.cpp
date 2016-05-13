@@ -89,8 +89,8 @@
 
 
 		//Allocate memory for the column swapper matrix
-		this->h_eigenVectorColumnSwapperMatrixLength = h_valuesPerSample * h_valuesPerSample;
-		this->h_eigenvectorColumnSwapperMatrix = new float[this->h_eigenVectorColumnSwapperMatrixLength];
+		//this->h_eigenVectorColumnSwapperMatrixLength = h_valuesPerSample * h_valuesPerSample;
+		//this->h_eigenvectorColumnSwapperMatrix = new float[this->h_eigenVectorColumnSwapperMatrixLength];
 
 
 
@@ -120,7 +120,7 @@
 		//delete [] this->h_VT;
 		delete [] this->h_S;
 
-		delete [] this->h_eigenvectorColumnSwapperMatrix;
+		//delete [] this->h_eigenvectorColumnSwapperMatrix;
 
 		delete [] this->h_outputSignal;
 
