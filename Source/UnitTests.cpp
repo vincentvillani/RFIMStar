@@ -38,7 +38,7 @@ void MeanUnitTest()
 
 	RFIMMemoryBlock* RFIMStruct = new RFIMMemoryBlock(valuesPerSample, sampleNum, 0, batchSize);
 
-	uint64_t signalLength = valuesPerSample * sampleNum * batchSize;
+	//uint64_t signalLength = valuesPerSample * sampleNum * batchSize;
 
 	/*
 	//Set the host signal
@@ -436,7 +436,7 @@ void ProjectionDeprojectionUnitTest()
 //The input and output filterbank files should be identical
 void PackingUnpackingUnitTest()
 {
-	uint32_t beamNum = 3;
+	uint32_t beamNum = 13;
 	uint32_t rawDataBlockNum = 10;
 	uint32_t numberOfWorkerThreads = 10;
 	uint32_t windowSize = 15625;
