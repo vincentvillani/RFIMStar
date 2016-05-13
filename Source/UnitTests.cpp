@@ -22,7 +22,7 @@ void RunAllUniTests()
 	EigenvectorSolverUnitTest();
 	ProjectionDeprojectionUnitTest();
 
-	//PackingUnpackingUnitTest();
+	PackingUnpackingUnitTest();
 
 	std::cout << "All unit tests complete!" << std::endl;
 }
@@ -305,9 +305,9 @@ void EigenvectorSolverUnitTest()
 void ProjectionDeprojectionUnitTest()
 {
 	uint64_t valuesPerSample = 2;
-	uint64_t numberOfSamples = 3; //THIS MAY MAKE THE UNIT TEST FAIL!?
+	uint64_t numberOfSamples = 4; //THIS MAY MAKE THE UNIT TEST FAIL!?
 	uint64_t dimensionsToReduce = 0;
-	uint64_t batchSize = 20;
+	uint64_t batchSize = 5;
 
 
 	RFIMMemoryBlock* RFIMStruct = new RFIMMemoryBlock(valuesPerSample, numberOfSamples, dimensionsToReduce, batchSize);
@@ -368,6 +368,7 @@ void ProjectionDeprojectionUnitTest()
 
 		for(uint64_t j = 0; j < 4; ++j)
 		{
+			printf("originalSignal[%llu][%llu]: %f\n", i, j, originalSignal[j]);
 			printf("filteredSignal[%llu][%llu]: %f\n", i, j, currentFilteredSignal[j]);
 
 			if(originalSignal[j] - currentFilteredSignal[j] > 0.000001f)
@@ -395,10 +396,11 @@ void ProjectionDeprojectionUnitTest()
 //The input and output filterbank files should be identical
 void PackingUnpackingUnitTest()
 {
-	uint32_t beamNum = 13;
+	uint32_t beamNum = 3;
 	uint32_t rawDataBlockNum = 10;
-	uint32_t numberOfWorkerThreads = 8;
+	uint32_t numberOfWorkerThreads = 10;
 	uint32_t windowSize = 15625;
+	uint32_t dimensionsToReduce = 0;
 
 	std::string inputFilenamePrefix = "/lustre/projects/p002_swin/surveys/SUPERB/2016-01-05-12:07:06/";
 	std::string inputFilenamePostfix = "/2016-01-05-12:07:06.fil";
@@ -406,7 +408,7 @@ void PackingUnpackingUnitTest()
 	std::string outputFilenamePrefix = "/lustre/projects/p002_swin/vvillani/";
 	std::string outputFilenamePostfix = ".fil";
 
-	RFIMConfiguration configuration = RFIMConfiguration(numberOfWorkerThreads, windowSize, beamNum, rawDataBlockNum,
+	RFIMConfiguration configuration = RFIMConfiguration(numberOfWorkerThreads, windowSize, beamNum, dimensionsToReduce, rawDataBlockNum,
 			inputFilenamePrefix, inputFilenamePostfix,
 			outputFilenamePrefix, outputFilenamePostfix);
 
@@ -488,7 +490,7 @@ void PackingUnpackingUnitTest()
 				fprintf(stderr, "PackingUnpackingUnitTest: Bytes do not have the same value!\n");
 				fprintf(stderr, "Total byte Size: %zu\ncurrentByteIndex: %llu\n", originalFilterbank->packedDataByteSize, currentByteIndex);
 				fprintf(stderr, "originalByte: %u\noutputByte: %u\n", originalByte, outputByte);
-				//exit(1);
+				exit(1);
 			}
 		}
 

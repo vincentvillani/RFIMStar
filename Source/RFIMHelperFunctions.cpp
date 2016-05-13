@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <iostream>
 
 #ifdef BUILD_WITH_MKL
 #include <mkl.h>
@@ -196,8 +197,16 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 {
 
 #ifdef BUILD_WITH_MKL
+
+
+	//Switch the columns, so that its highest...lowest eigenvectors
+
+
+
 	//Set the appropriate number of columns to zero
 	uint64_t eigenvectorZeroByteSize = sizeof(float) * RFIMStruct->h_valuesPerSample * RFIMStruct->h_eigenVectorDimensionsToReduce;
+
+	//std::cout << "EigenZeroByteSize: " << eigenvectorZeroByteSize << std::endl;
 
 	//Eigenvectors are stored in the covariance matrix when using MKL
 	//Eigenvectors with the lowest eigenvalues are stored first
@@ -209,11 +218,8 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 	{
 		memset(startingEigenVector + (i * eigenVectorBatchOffset), 0, eigenvectorZeroByteSize);
 
-		/*
-		cudaMemsetAsync(RFIMStruct->d_U + (i * RFIMStruct->h_UBatchOffset),
-				0, eigenvectorZeroByteSize, RFIMStruct->h_cudaStreams[cudaStreamIterator]);
-		*/
 	}
+
 
 
 

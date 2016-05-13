@@ -158,7 +158,7 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 	//h_valuesPerSample = number of beams (or filterbank files)
 	//h_numberOfSamples = window size
 	//batchSize = number of channels
-	RFIMMemoryBlock* rfimMemoryBlock = new RFIMMemoryBlock(configuration->beamNum, configuration->windowSize, 1, configuration->channelNum);
+	RFIMMemoryBlock* rfimMemoryBlock = new RFIMMemoryBlock(configuration->beamNum, configuration->windowSize, configuration->dimensionsToReduce, configuration->channelNum);
 
 
 	//Is there any work to do?
@@ -212,9 +212,6 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 		RFIM(rfimMemoryBlock);
 
 
-		//TODO: ADD THIS. FOR NOW JUST DO A MEMCOPY OF THE DATA FROM INPUT TO OUTPUT
-		//uint64_t totalSignalByteSize = sizeof(float) * rfimMemoryBlock->h_valuesPerSample * rfimMemoryBlock->h_numberOfSamples *
-		//		rfimMemoryBlock->h_batchSize;
 
 		//COPY ALL DATA OVER REGARDLESS IF IT IS USED OR NOT?
 		//uint64_t totalSignalByteSize = sizeof(float) * rfimMemoryBlock->h_valuesPerSample * configuration->windowSize *
