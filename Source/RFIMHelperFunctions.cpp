@@ -8,6 +8,7 @@
 #include "../Header/RFIMHelperFunctions.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #ifdef BUILD_WITH_MKL
 #include <mkl.h>
@@ -193,6 +194,79 @@ void EigenvalueSolver(RFIMMemoryBlock* RFIMStruct)
 
 void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 {
+	//Set the appropriate number of columns to zero
+	uint64_t eigenvectorZeroByteSize = sizeof(float) * RFIMStruct->h_valuesPerSample * RFIMStruct->h_eigenVectorDimensionsToReduce;
+
+	//Eigenvectors are stored in the covariance matrix when using MKL
+	//Eigenvectors with the lowest eigenvalues are stored first
+	//smallest -> largest
+	float* startingEigenVector = RFIMStruct->h_covarianceMatrix + ((RFIMStruct->h_valuesPerSample - RFIMStruct->h_eigenVectorDimensionsToReduce) * RFIMStruct->h_valuesPerSample);
+	uint32_t eigenVectorBatchOffset = RFIMStruct->h_valuesPerSample * RFIMStruct->h_valuesPerSample;
+
+	for(uint64_t i = 0; i < RFIMStruct->h_batchSize; ++i)
+	{
+		memset(startingEigenVector + (i * eigenVectorBatchOffset), 0, eigenvectorZeroByteSize);
+
+		/*
+		cudaMemsetAsync(RFIMStruct->d_U + (i * RFIMStruct->h_UBatchOffset),
+				0, eigenvectorZeroByteSize, RFIMStruct->h_cudaStreams[cudaStreamIterator]);
+		*/
+	}
+
+
+
+
+	float alpha = 1;
+	float beta = 0;
+
+	uint64_t originalSignalBatchOffset = RFIMStruct->h_valuesPerSample * RFIMStruct->h_numberOfSamples;
+
+
+	//Do the projection
+	for(uint64_t i = 0; i < RFIMStruct->h_batchSize; ++i)
+	{
+
+
+		//Projected signal matrix
+		//Ps = (Er Transposed) * Os
+		cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
+				RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
+				alpha, RFIMStruct->h_covarianceMatrix + (i * RFIMStruct->h_covarianceMatrixBatchOffset), RFIMStruct->h_valuesPerSample,
+				RFIMStruct->h_inputSignal + (i * originalSignalBatchOffset), RFIMStruct->h_valuesPerSample, beta,
+				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
+
+
+		/*
+		cublasStatus = cublasSgemm_v2(*RFIMStruct->cublasHandle, CUBLAS_OP_T, CUBLAS_OP_N,
+				RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
+				&alpha, RFIMStruct->d_U + (i * RFIMStruct->h_UBatchOffset), RFIMStruct->h_valuesPerSample,
+				d_originalSignalMatrices + (i * originalSignalBatchOffset), RFIMStruct->h_valuesPerSample, &beta,
+				RFIMStruct->d_projectedSignalMatrix + (i * RFIMStruct->h_projectedSignalBatchOffset), RFIMStruct->h_valuesPerSample);
+
+		*/
+
+
+		//Do the reprojection back
+		//final signal matrix
+		// Fs = Er * Ps
+
+		cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
+				RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
+				alpha,  RFIMStruct->h_covarianceMatrix + (i * RFIMStruct->h_covarianceMatrixBatchOffset), RFIMStruct->h_valuesPerSample,
+				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample, beta,
+				RFIMStruct->h_inputSignal + (i * originalSignalBatchOffset), RFIMStruct->h_valuesPerSample);
+
+
+
+		/*
+		cublasStatus_t = cublasSgemm_v2(*RFIMStruct->cublasHandle, CUBLAS_OP_N, CUBLAS_OP_N,
+				RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
+				&alpha, RFIMStruct->d_U + (i * RFIMStruct->h_UBatchOffset), RFIMStruct->h_valuesPerSample,
+				RFIMStruct->d_projectedSignalMatrix + (i * RFIMStruct->h_projectedSignalBatchOffset), RFIMStruct->h_valuesPerSample, &beta,
+				d_filteredSignals + (i * originalSignalBatchOffset), RFIMStruct->h_valuesPerSample);
+
+		*/
+	}
 
 }
 

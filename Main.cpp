@@ -11,6 +11,7 @@
 
 
 //TODO: EIGENVALUES/VECTORS ARE RETURNED FROM LOWEST TO HIGHEST! ACCOUNT FOR THIS!
+//TODO: Make sure RFIMMemoryBlock->h_dimensions to reduce is actually set
 //TODO: Actually add the RFIM routine
 //TODO: Write unit tests for the different RFIM steps
 //TODO: Calculate how many dimensions to reduce at run-time, rather than a hardcoded 1

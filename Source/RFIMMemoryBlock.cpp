@@ -65,7 +65,7 @@
 		this->h_covarianceMatrix = new float[covarianceMatrixLength]; //(float*)malloc(covarianceMatrixByteSize);
 
 
-
+		/*
 		//Eigenvector stuff
 		//------------------------
 		uint64_t singleULength = h_valuesPerSample * h_valuesPerSample;
@@ -77,7 +77,7 @@
 
 		this->h_UBatchOffset = singleULength;
 		this->h_VTBatchOffset = singleULength;
-
+		*/
 
 		//S
 		uint64_t singleSLength = h_valuesPerSample;
@@ -95,7 +95,7 @@
 		//uint64_t projectedSignalByteSize = sizeof(float) * projectedSignalLength;
 		this->h_outputSignal = new float[projectedSignalLength];
 
-		this->h_outputSignalBatchOffset = projectedSignalSingleLength; //(float*)malloc(projectedSignalByteSize);
+		this->h_outputSignalBatchOffset = projectedSignalSingleLength;
 
 	}
 
@@ -109,8 +109,8 @@
 
 		delete [] this->h_covarianceMatrix;
 
-		delete [] this->h_U;
-		delete [] this->h_VT;
+		//delete [] this->h_U;
+		//delete [] this->h_VT;
 		delete [] this->h_S;
 
 		delete [] this->h_outputSignal;

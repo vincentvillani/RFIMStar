@@ -45,14 +45,14 @@ public:
 
 
 	//Eigenvector/value working memory
-	float* h_U;
-	uint64_t h_UBatchOffset;
+	//float* h_U;
+	//uint64_t h_UBatchOffset;
 
 	float* h_S;
 	uint64_t h_SBatchOffset;
 
-	float* h_VT;
-	uint64_t h_VTBatchOffset;
+	//float* h_VT;
+	//uint64_t h_VTBatchOffset;
 
 
 	float* h_outputSignal;
