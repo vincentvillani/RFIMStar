@@ -10,9 +10,12 @@
 #include "Header/UnitTests.h"
 
 
-//TODO: Refractor out of place multiplexing code to make more sense
+//TODO: EIGENVALUES/VECTORS ARE RETURNED FROM LOWEST TO HIGHEST! ACCOUNT FOR THIS!
 //TODO: Actually add the RFIM routine
+//TODO: Write unit tests for the different RFIM steps
 //TODO: Calculate how many dimensions to reduce at run-time, rather than a hardcoded 1
+//TODO: Check for memory allocation errors
+//TODO: Unit test for memory leaks
 //TODO: Make the configuration be setup by passing arguments to the program via the command line
 //TODO: Add the ability to read in and write out different nbit values
 int main()

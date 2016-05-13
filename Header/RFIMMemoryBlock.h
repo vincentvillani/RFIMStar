@@ -32,7 +32,9 @@ public:
 	uint64_t h_inputSignalBatchOffset;
 
 	//Mean working memory
-	float* h_oneVec; //A vector filled with ones, to calculate the mean
+	//A vector filled with ones, to calculate the mean
+	//1 x h_numberOfSamples
+	float* h_oneVec;
 
 	float* h_meanVec;
 	uint64_t h_meanVecBatchOffset;
