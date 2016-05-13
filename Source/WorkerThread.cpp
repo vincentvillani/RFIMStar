@@ -333,7 +333,8 @@ void WorkerThreadPackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock, R
 	uint64_t totalSignalLength = rfimMemoryBlock->h_valuesPerSample * configuration->windowSize * rfimMemoryBlock->h_batchSize;
 	for(uint64_t i = 0; i < totalSignalLength; ++i)
 	{
-		outputCharData[i] = (unsigned char)rfimMemoryBlock->h_outputSignal[i];
+		//MAKE SURE IT'S ROUNDED UP OR DOWN APPROPRIATELY
+		outputCharData[i] = (rfimMemoryBlock->h_outputSignal[i] + 0.5f);
 	}
 
 
