@@ -11,6 +11,8 @@
 #include <math.h>
 #include <string.h>
 
+#include "../Header/RFIMHelperFunctions.h"
+
 #ifdef BUILD_WITH_MKL
 #include <mkl.h>
 #include <mkl_trans.h>
@@ -134,6 +136,17 @@ void pack(unsigned char* buffer, unsigned char* outbuffer, int nbits, int nbytes
 
 
 
+void RFIM(RFIMMemoryBlock* rfimMemoryBlock)
+{
+	CalculateCovarianceMatrix(rfimMemoryBlock);
+
+	EigenvalueSolver(rfimMemoryBlock);
+
+	EigenReductionAndFiltering(rfimMemoryBlock);
+}
+
+
+
 
 void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, MasterMailbox* masterMailbox,
 		RFIMConfiguration* configuration)
@@ -196,14 +209,17 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 
 
 		//Run RFIM
+		RFIM(rfimMemoryBlock);
+
+
 		//TODO: ADD THIS. FOR NOW JUST DO A MEMCOPY OF THE DATA FROM INPUT TO OUTPUT
 		//uint64_t totalSignalByteSize = sizeof(float) * rfimMemoryBlock->h_valuesPerSample * rfimMemoryBlock->h_numberOfSamples *
 		//		rfimMemoryBlock->h_batchSize;
 
 		//COPY ALL DATA OVER REGARDLESS IF IT IS USED OR NOT?
-		uint64_t totalSignalByteSize = sizeof(float) * rfimMemoryBlock->h_valuesPerSample * configuration->windowSize *
-					rfimMemoryBlock->h_batchSize;
-		memcpy(rfimMemoryBlock->h_outputSignal, rfimMemoryBlock->h_inputSignal, totalSignalByteSize);
+		//uint64_t totalSignalByteSize = sizeof(float) * rfimMemoryBlock->h_valuesPerSample * configuration->windowSize *
+		//			rfimMemoryBlock->h_batchSize;
+		//memcpy(rfimMemoryBlock->h_outputSignal, rfimMemoryBlock->h_inputSignal, totalSignalByteSize);
 
 
 		//De-Multiplex the data
