@@ -20,6 +20,7 @@ void RunAllUniTests()
 	MeanUnitTest();
 	CovarianceMatrixUnitTest();
 	EigenvectorSolverUnitTest();
+	ProjectionDeprojectionUnitTest();
 
 	//PackingUnpackingUnitTest();
 
@@ -303,7 +304,88 @@ void EigenvectorSolverUnitTest()
 
 void ProjectionDeprojectionUnitTest()
 {
+	uint64_t valuesPerSample = 2;
+	uint64_t numberOfSamples = 3; //THIS MAY MAKE THE UNIT TEST FAIL!?
+	uint64_t dimensionsToReduce = 0;
+	uint64_t batchSize = 20;
 
+
+	RFIMMemoryBlock* RFIMStruct = new RFIMMemoryBlock(valuesPerSample, numberOfSamples, dimensionsToReduce, batchSize);
+
+
+	uint64_t singleSignalLength = valuesPerSample * numberOfSamples;
+	uint64_t signalLength = singleSignalLength * batchSize;
+	uint64_t signalByteSize = sizeof(float) * signalLength;
+
+	float* h_signalCopy = (float*)malloc(signalByteSize);
+
+
+	//Set the signal
+	for(uint64_t i = 0; i < batchSize; ++i)
+	{
+		float* currentSignal = RFIMStruct->h_inputSignal + (i * singleSignalLength);
+		float* currentSignalCopy = h_signalCopy + (i * singleSignalLength);
+
+		currentSignal[0] = 1.0f;
+		currentSignalCopy[0] = currentSignal[0];
+
+		currentSignal[1] = 2.0f;
+		currentSignalCopy[1] = currentSignal[1];
+
+		currentSignal[2] = 7.0f;
+		currentSignalCopy[2] = currentSignal[2];
+
+
+		currentSignal[3] = -8.0f;
+		currentSignalCopy[3] = currentSignal[3];
+	}
+
+
+
+	//Calculate the covarianceMatrices
+	CalculateCovarianceMatrix(RFIMStruct);
+
+
+	//Calculate the eigenvectors/values
+	EigenvalueSolver(RFIMStruct);
+
+
+
+	//Allocate memory for the filtered signal
+	//float* h_filteredSignal = (float*)malloc(signalByteSize);
+
+
+	//Do the projection/reprojection
+	EigenReductionAndFiltering(RFIMStruct);
+
+
+
+	//print/check the results
+	for(uint64_t i = 0; i < batchSize; ++i)
+	{
+		float* originalSignal = h_signalCopy  + (i * singleSignalLength); //Copy of the original signal
+		float* currentFilteredSignal = RFIMStruct->h_inputSignal + (i * singleSignalLength); //Signal after projection/deprojection
+
+		for(uint64_t j = 0; j < 4; ++j)
+		{
+			printf("filteredSignal[%llu][%llu]: %f\n", i, j, currentFilteredSignal[j]);
+
+			if(originalSignal[j] - currentFilteredSignal[j] > 0.000001f)
+			{
+				fprintf(stderr, "FilteringProductionHost unit test: results are different from expected!\n");
+				fprintf(stderr, "Expected %f, Actual: %f\n", originalSignal[j], currentFilteredSignal[j]);
+				exit(1);
+			}
+		}
+	}
+
+
+
+	//Free all memory
+	free(h_signalCopy);
+
+
+	delete RFIMStruct;
 }
 
 

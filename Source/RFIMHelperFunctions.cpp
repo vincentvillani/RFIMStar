@@ -194,6 +194,8 @@ void EigenvalueSolver(RFIMMemoryBlock* RFIMStruct)
 
 void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 {
+
+#ifdef BUILD_WITH_MKL
 	//Set the appropriate number of columns to zero
 	uint64_t eigenvectorZeroByteSize = sizeof(float) * RFIMStruct->h_valuesPerSample * RFIMStruct->h_eigenVectorDimensionsToReduce;
 
@@ -232,7 +234,7 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 		cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
 				RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
 				alpha, RFIMStruct->h_covarianceMatrix + (i * RFIMStruct->h_covarianceMatrixBatchOffset), RFIMStruct->h_valuesPerSample,
-				RFIMStruct->h_inputSignal + (i * originalSignalBatchOffset), RFIMStruct->h_valuesPerSample, beta,
+				RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset), RFIMStruct->h_valuesPerSample, beta,
 				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
 
 
@@ -254,7 +256,7 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 				RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
 				alpha,  RFIMStruct->h_covarianceMatrix + (i * RFIMStruct->h_covarianceMatrixBatchOffset), RFIMStruct->h_valuesPerSample,
 				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample, beta,
-				RFIMStruct->h_inputSignal + (i * originalSignalBatchOffset), RFIMStruct->h_valuesPerSample);
+				RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
 
 
 
@@ -267,6 +269,9 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 
 		*/
 	}
+
+#endif
+
 
 }
 
