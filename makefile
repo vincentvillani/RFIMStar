@@ -5,12 +5,12 @@ RELEASE_FLAGS=-O3 -std=c++11
 FILE_LIST=Main.cpp Source/MasterMailbox.cpp Source/ReaderThread.cpp Source/ReaderThreadData.cpp Source/ReaderWorkerMailbox.cpp Source/RFIMConfiguration.cpp Source/RFIMHelperFunctions.cpp Source/RFIMMemoryBlock.cpp Source/RFIMStar.cpp Source/UnitTests.cpp Source/WorkerThread.cpp Source/WorkerThreadData.cpp Source/WorkerWriterMailbox.cpp Source/WriterReaderMailbox.cpp Source/WriterThread.cpp Source/WriterThreadData.cpp
 
 debug:
-	g++ $(CC_FLAGS) -o debug.out $(FILE_LIST) $(LIBS) $(DEBUG_FLAGS)
+	g++ $(CC_FLAGS) -o RFIMStarDebug $(FILE_LIST) $(LIBS) $(DEBUG_FLAGS)
 
 
 release:
-	g++ $(CC_FLAGS) -o release.out $(FILE_LIST) $(LIBS) $(RELEASE_FLAGS)
+	g++ $(CC_FLAGS) -o RFIMStarRelease $(FILE_LIST) $(LIBS) $(RELEASE_FLAGS)
 
 
 clean:
-	rm *.out
+	rm RFIMStarDebug RFIMStarRelease
