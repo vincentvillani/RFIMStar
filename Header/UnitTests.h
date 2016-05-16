@@ -15,6 +15,8 @@
 void RunAllUniTests();
 
 
+void MultiplexDemultiplexUnitTest();
+
 //Unit test to check that calculating the mean of a signal works correctly
 void MeanUnitTest();
 
@@ -26,7 +28,6 @@ void EigenvectorSolverUnitTest();
 void ProjectionDeprojectionUnitTest();
 
 void Remove1DProjectionDeprojectionUnitTest();
-
 
 //Pack and unpack filterbank files without doing RFIM
 //Tests to see if the unpack and pack functionality works correctly

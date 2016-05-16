@@ -20,10 +20,10 @@ int main()
 {
 
 	//Unit tests
-	//RunAllUniTests();
+	RunAllUniTests();
 
 
-
+	/*
 	uint32_t beamNum = 13;
 	uint32_t rawDataBlockNum = 5;
 	uint32_t numberOfWorkerThreads = 14;
@@ -44,6 +44,8 @@ int main()
 	RFIMStarRoutine(&configuration);
 
 	std::cout << "Done!" << std::endl;
+
+	*/
 
 
 	return 0;

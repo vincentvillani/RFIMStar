@@ -14,19 +14,121 @@
 
 #include "../Header/RFIMHelperFunctions.h"
 #include "../Header/RFIMMemoryBlock.h"
+#include "../Header/WorkerThread.h"
 
 void RunAllUniTests()
 {
-	//MeanUnitTest();
-	//CovarianceMatrixUnitTest();
-	//EigenvectorSolverUnitTest();
-	//ProjectionDeprojectionUnitTest();
+	MultiplexDemultiplexUnitTest();
+
+	MeanUnitTest();
+	CovarianceMatrixUnitTest();
+	EigenvectorSolverUnitTest();
+	ProjectionDeprojectionUnitTest();
 	Remove1DProjectionDeprojectionUnitTest();
 
-	//PackingUnpackingUnitTest();
+	PackingUnpackingUnitTest();
 
 	std::cout << "All unit tests complete!" << std::endl;
 }
+
+
+
+void MultiplexDemultiplexUnitTest()
+{
+	uint32_t numberOfBeams = 2;
+	uint32_t freqChannelNum = 3;
+	uint32_t numberOfSamples = 4;
+	uint32_t dimensionsToReduce = 0;
+	uint32_t numberOfWorkerThreads = 1;
+	uint32_t numberOfRawDatablocks = 0;
+
+	//Setup memory
+	RFIMMemoryBlock* RFIMMemBlock = new RFIMMemoryBlock(numberOfBeams, numberOfSamples, dimensionsToReduce, freqChannelNum);
+	RFIMConfiguration* configuration = new RFIMConfiguration(numberOfWorkerThreads, numberOfSamples, numberOfBeams, dimensionsToReduce,
+			numberOfRawDatablocks, "", "", "", "");
+	configuration->channelNum = freqChannelNum; //Usually set by the filterbank files, so we have to set it manually here
+
+	//Setup the signal
+	uint32_t totalSignalLength = numberOfBeams * numberOfSamples * freqChannelNum;
+
+	for(uint32_t i = 0; i < totalSignalLength; ++i)
+	{
+		RFIMMemBlock->h_outputSignal[i] = i;
+	}
+
+	//Multiplex the data
+	WorkerThreadMultiplexData(RFIMMemBlock, configuration);
+
+
+	float expectedResultsMultipexResults[numberOfBeams * freqChannelNum * numberOfSamples];
+
+	expectedResultsMultipexResults[0] = 0;
+	expectedResultsMultipexResults[1] = 12;
+	expectedResultsMultipexResults[2] = 3;
+	expectedResultsMultipexResults[3] = 15;
+	expectedResultsMultipexResults[4] = 6;
+	expectedResultsMultipexResults[5] = 18;
+	expectedResultsMultipexResults[6] = 9;
+	expectedResultsMultipexResults[7] = 21;
+	expectedResultsMultipexResults[8] = 1;
+	expectedResultsMultipexResults[9] = 13;
+	expectedResultsMultipexResults[10] = 4;
+	expectedResultsMultipexResults[11] = 16;
+	expectedResultsMultipexResults[12] = 7;
+	expectedResultsMultipexResults[13] = 19;
+	expectedResultsMultipexResults[14] = 10;
+	expectedResultsMultipexResults[15] = 22;
+	expectedResultsMultipexResults[16] = 2;
+	expectedResultsMultipexResults[17] = 14;
+	expectedResultsMultipexResults[18] = 5;
+	expectedResultsMultipexResults[19] = 17;
+	expectedResultsMultipexResults[20] = 8;
+	expectedResultsMultipexResults[21] = 20;
+	expectedResultsMultipexResults[22] = 11;
+	expectedResultsMultipexResults[23] = 23;
+
+
+
+
+	//Check the results of multiplexing
+	for(uint32_t i = 0; i < totalSignalLength; ++i)
+	{
+		if(RFIMMemBlock->h_inputSignal[i] - expectedResultsMultipexResults[i] > 0.0000001f)
+		{
+			fprintf(stderr, "MultiplexDemultiplexUnitTest: Multiplexing is producing the wrong results!\n");
+			fprintf(stderr, "Expected: %f, Actual: %f\n", expectedResultsMultipexResults[i], RFIMMemBlock->h_inputSignal[i]);
+			exit(1);
+		}
+
+		//printf("signal[%lu]: %f\n", i, RFIMMemBlock->h_inputSignal[i]);
+	}
+
+
+
+	//Demultiplex the data
+	WorkerThreadDeMultiplexData(RFIMMemBlock, configuration);
+
+
+	//Check the results of demultiplexing
+	for(uint32_t i = 0; i < totalSignalLength; ++i)
+	{
+		if(RFIMMemBlock->h_outputSignal[i] - i > 0.0000001f)
+		{
+			fprintf(stderr, "MultiplexDemultiplexUnitTest: De-multiplexing is producing the wrong results!\n");
+			fprintf(stderr, "Expected: %f, Actual: %f\n", (float)i, RFIMMemBlock->h_outputSignal[i]);
+		}
+
+		//printf("signal[%lu]: %f\n", i, RFIMMemBlock->h_outputSignal[i]);
+	}
+
+
+	//Free all memory
+	delete RFIMMemBlock;
+	delete configuration;
+
+
+}
+
 
 
 
@@ -436,8 +538,8 @@ void Remove1DProjectionDeprojectionUnitTest()
 {
 	uint64_t valuesPerSample = 2;
 	uint64_t numberOfSamples = 4;
-	uint64_t dimensionsToReduce = 1;
-	uint64_t batchSize = 2;
+	uint64_t dimensionsToReduce = 2;
+	uint64_t batchSize = 0;
 
 
 	RFIMMemoryBlock* RFIMStruct = new RFIMMemoryBlock(valuesPerSample, numberOfSamples, dimensionsToReduce, batchSize);
@@ -512,7 +614,7 @@ void Remove1DProjectionDeprojectionUnitTest()
 		for(uint64_t j = 0; j < valuesPerSample * numberOfSamples; ++j)
 		{
 			printf("originalSignal[%llu][%llu]: %f\n", i, j, originalSignal[j]);
-			printf("filteredSignal[%llu][%llu]: %f\n", i, j, currentFilteredSignal[j]);
+			printf("filteredSignal[%llu][%llu]: %f\n\n", i, j, currentFilteredSignal[j]);
 
 			/*
 			if(originalSignal[j] - currentFilteredSignal[j] > 0.000001f)
@@ -550,7 +652,7 @@ void PackingUnpackingUnitTest()
 	std::string inputFilenamePrefix = "/lustre/projects/p002_swin/surveys/SUPERB/2016-01-05-12:07:06/";
 	std::string inputFilenamePostfix = "/2016-01-05-12:07:06.fil";
 
-	std::string outputFilenamePrefix = "/lustre/projects/p002_swin/vvillani/";
+	std::string outputFilenamePrefix = "/lustre/projects/p002_swin/vvillani/PackingUnpackingUnitTest/";
 	std::string outputFilenamePostfix = ".fil";
 
 	RFIMConfiguration configuration = RFIMConfiguration(numberOfWorkerThreads, windowSize, beamNum, dimensionsToReduce, rawDataBlockNum,

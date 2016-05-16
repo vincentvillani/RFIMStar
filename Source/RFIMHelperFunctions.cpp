@@ -218,7 +218,6 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 	for(uint64_t i = 0; i < RFIMStruct->h_batchSize; ++i)
 	{
 		memset(startingEigenVector + (i * eigenVectorBatchOffset), 0, eigenvectorZeroByteSize);
-
 	}
 
 

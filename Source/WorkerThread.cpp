@@ -289,15 +289,50 @@ void WorkerThreadUnpackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock,
 
 void WorkerThreadMultiplexData(RFIMMemoryBlock* rfimMemoryBlock, RFIMConfiguration* configuration)
 {
-	//Transpose the matrix in place to multiplex the signal correctly
-	//
 
+	//Offsets for the input signal
+	uint64_t inputFreqChannelOffset = configuration->beamNum * configuration->windowSize;
+	uint64_t inputTimeSampleOffset = configuration->beamNum;
+
+	//Offsets for the output signal
+    uint64_t outputBeamOffset = configuration->channelNum * configuration->windowSize;
+
+
+	//For each frequency channel
+	for(uint64_t f = 0; f < configuration->channelNum; ++f)
+	{
+		//The current frequency channel offset
+		uint64_t currentInputFreqChannelOffset = f * inputFreqChannelOffset;
+
+		//For each time sample
+		for(uint64_t t = 0; t < configuration->windowSize; ++t)
+		{
+			uint64_t currentInputTimeSampleOffset = t * inputTimeSampleOffset;
+
+			//For each beam
+			for(uint64_t b = 0; b < configuration->beamNum; ++b)
+			{
+				//printf("inputSignalIndex: %llu\n", currentInputFreqChannelOffset + currentInputTimeSampleOffset + b);
+				//printf("outputSignalIndex: %llu\n\n", (b * outputBeamOffset) + currentInputTimeSampleOffset + f);
+
+				rfimMemoryBlock->h_inputSignal[currentInputFreqChannelOffset + currentInputTimeSampleOffset + b] =
+						rfimMemoryBlock->h_outputSignal[
+							(b * (configuration->channelNum * configuration->windowSize)) + t * configuration->channelNum + f
+							];
+
+			}
+		}
+
+	}
+
+	/*
 	#ifdef BUILD_WITH_MKL
 	mkl_somatcopy('c', 't',
 			configuration->windowSize * rfimMemoryBlock->h_batchSize, rfimMemoryBlock->h_valuesPerSample,
 			1.0f, rfimMemoryBlock->h_outputSignal, configuration->windowSize * rfimMemoryBlock->h_batchSize,
 			rfimMemoryBlock->h_inputSignal, rfimMemoryBlock->h_valuesPerSample);
 	#endif
+	*/
 
 
 
@@ -308,15 +343,55 @@ void WorkerThreadMultiplexData(RFIMMemoryBlock* rfimMemoryBlock, RFIMConfigurati
 
 void WorkerThreadDeMultiplexData(RFIMMemoryBlock* rfimMemoryBlock, RFIMConfiguration* configuration)
 {
-	//Transpose the matrix in place to demultiplex the signal correctly
-	//
 
+	//Offsets for the input signal
+	uint64_t inputFreqChannelOffset = configuration->beamNum * configuration->windowSize;
+	uint64_t inputTimeSampleOffset = configuration->beamNum;
+
+	//Offsets for the output signal
+    uint64_t outputBeamOffset = configuration->channelNum * configuration->windowSize;
+
+
+	//For each frequency channel
+	for(uint64_t f = 0; f < configuration->channelNum; ++f)
+	{
+		//The current frequency channel offset
+		uint64_t currentInputFreqChannelOffset = f * inputFreqChannelOffset;
+
+		//For each time sample
+		for(uint64_t t = 0; t < configuration->windowSize; ++t)
+		{
+			uint64_t currentInputTimeSampleOffset = t * inputTimeSampleOffset;
+
+			//For each beam
+			for(uint64_t b = 0; b < configuration->beamNum; ++b)
+			{
+				//printf("inputSignalIndex: %llu\n", currentInputFreqChannelOffset + currentInputTimeSampleOffset + b);
+				//printf("outputSignalIndex: %llu\n\n", (b * outputBeamOffset) + currentInputTimeSampleOffset + f);
+
+				rfimMemoryBlock->h_outputSignal[(b * (configuration->channelNum * configuration->windowSize)) + t * configuration->channelNum + f] =
+						rfimMemoryBlock->h_inputSignal[currentInputFreqChannelOffset + currentInputTimeSampleOffset + b];
+
+
+			}
+		}
+
+	}
+
+
+
+
+
+
+
+/*
 	#ifdef BUILD_WITH_MKL
 	mkl_somatcopy('c', 't',
 			rfimMemoryBlock->h_valuesPerSample, configuration->windowSize * rfimMemoryBlock->h_batchSize,
 			1.0f, rfimMemoryBlock->h_inputSignal, rfimMemoryBlock->h_valuesPerSample,
 			rfimMemoryBlock->h_outputSignal, configuration->windowSize * rfimMemoryBlock->h_batchSize);
 	#endif
+	*/
 }
 
 
