@@ -104,9 +104,13 @@ void RFIMStarRoutine(RFIMConfiguration* configuration)
 	MasterMailbox* masterMailbox = new MasterMailbox(readerWorkerMailbox, workerWriterMailbox, writerReaderMailbox);
 
 
+
+
 	//Start threads
-	//Reading thread
-	std::thread readingThread(ReaderThreadMain, std::ref(filterbanks), readerThreadData, configuration, masterMailbox);
+
+	//Start the writer thread
+	std::thread writerThread(WriterThreadMain, writerThreadData, configuration, masterMailbox);
+
 
 	//Worker threads
 	std::vector<std::thread*> workerThreadVector;
@@ -115,8 +119,10 @@ void RFIMStarRoutine(RFIMConfiguration* configuration)
 		workerThreadVector.push_back(new std::thread(WorkerThreadMain, i, workerThreadDataVector[i], masterMailbox, configuration));
 	}
 
-	//Start the writer thread
-	std::thread writerThread(WriterThreadMain, writerThreadData, configuration, masterMailbox);
+
+	//Reading thread
+	std::thread readingThread(ReaderThreadMain, std::ref(filterbanks), readerThreadData, configuration, masterMailbox);
+
 
 	//Wait till should exit is set (join with all created threads?)
 	readingThread.join();
