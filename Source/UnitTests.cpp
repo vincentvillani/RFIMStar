@@ -644,7 +644,7 @@ void Remove1DProjectionDeprojectionUnitTest()
 void PackingUnpackingUnitTest()
 {
 	uint32_t beamNum = 13;
-	uint32_t rawDataBlockNum = 5;
+	uint32_t rawDataBlockNum = 2;
 	uint32_t numberOfWorkerThreads = 10;
 	uint32_t windowSize = 15625;
 	uint32_t dimensionsToReduce = 0;
