@@ -18,11 +18,11 @@
 
 void RunAllUnitTests()
 {
-	MultiplexDemultiplexUnitTest();
+	//MultiplexDemultiplexUnitTest();
 
 	//MeanUnitTest();
 	//CovarianceMatrixUnitTest();
-	EigenvectorSolverUnitTest();
+	//EigenvectorSolverUnitTest();
 	//ProjectionDeprojectionUnitTest();
 	//Remove1DProjectionDeprojectionUnitTest();
 

@@ -10,7 +10,8 @@
 #include "Header/RFIMStar.h"
 #include "Header/UnitTests.h"
 
-
+//TODO: Figure out how to correctly project and deproject
+//TODO: What if the values go above or below a the range that the bits can represent?
 //TODO: Calculate how many dimensions to reduce at run-time, rather than a hardcoded 1
 //TODO: Check for memory allocation errors
 //TODO: Unit test for memory leaks
