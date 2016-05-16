@@ -211,6 +211,7 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 	//Eigenvectors are stored in the covariance matrix when using MKL
 	//Eigenvectors with the lowest eigenvalues are stored first
 	//smallest -> largest
+	//float* startingEigenVector = RFIMStruct->h_covarianceMatrix;
 	float* startingEigenVector = RFIMStruct->h_covarianceMatrix + ((RFIMStruct->h_valuesPerSample - RFIMStruct->h_eigenVectorDimensionsToReduce) * RFIMStruct->h_valuesPerSample);
 	uint32_t eigenVectorBatchOffset = RFIMStruct->h_valuesPerSample * RFIMStruct->h_valuesPerSample;
 

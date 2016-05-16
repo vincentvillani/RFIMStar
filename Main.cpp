@@ -5,13 +5,12 @@
  *      Author: vincentvillani
  */
 
-#include "Header/RFIMStar.h"
+#include <iostream>
 
+#include "Header/RFIMStar.h"
 #include "Header/UnitTests.h"
 
-//TODO: MAKE SURE IT DOESN'T MATTER IF YOU REDUCE AN EIGENVECTOR MATRIX THATS LOWEST FROM HIGHEST
-//		DO YOU GET THE SAME RESULTS EITHER WAY?
-//TODO: EIGENVALUES/VECTORS ARE RETURNED FROM LOWEST TO HIGHEST! ACCOUNT FOR THIS!
+
 //TODO: Calculate how many dimensions to reduce at run-time, rather than a hardcoded 1
 //TODO: Check for memory allocation errors
 //TODO: Unit test for memory leaks
@@ -21,9 +20,31 @@ int main()
 {
 
 	//Unit tests
-	RunAllUniTests();
+	//RunAllUniTests();
 
-	//RFIMStarRoutine();
+
+
+	uint32_t beamNum = 13;
+	uint32_t rawDataBlockNum = 5;
+	uint32_t numberOfWorkerThreads = 14;
+	uint32_t windowSize = 169;
+	uint32_t dimensionsToReduce = 2;
+
+	std::string inputFilenamePrefix = "/lustre/projects/p002_swin/surveys/SUPERB/2016-01-05-12:07:06/";
+	std::string inputFilenamePostfix = "/2016-01-05-12:07:06.fil";
+
+	std::string outputFilenamePrefix = "/lustre/projects/p002_swin/vvillani/";
+	std::string outputFilenamePostfix = "a2-169W.fil";
+
+	RFIMConfiguration configuration = RFIMConfiguration(numberOfWorkerThreads, windowSize, beamNum, dimensionsToReduce, rawDataBlockNum,
+			inputFilenamePrefix, inputFilenamePostfix,
+			outputFilenamePrefix, outputFilenamePostfix);
+
+
+	RFIMStarRoutine(&configuration);
+
+	std::cout << "Done!" << std::endl;
+
 
 	return 0;
 }

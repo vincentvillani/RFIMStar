@@ -17,12 +17,13 @@
 
 void RunAllUniTests()
 {
-	MeanUnitTest();
-	CovarianceMatrixUnitTest();
-	EigenvectorSolverUnitTest();
-	ProjectionDeprojectionUnitTest();
+	//MeanUnitTest();
+	//CovarianceMatrixUnitTest();
+	//EigenvectorSolverUnitTest();
+	//ProjectionDeprojectionUnitTest();
+	Remove1DProjectionDeprojectionUnitTest();
 
-	PackingUnpackingUnitTest();
+	//PackingUnpackingUnitTest();
 
 	std::cout << "All unit tests complete!" << std::endl;
 }
@@ -431,13 +432,117 @@ void ProjectionDeprojectionUnitTest()
 
 
 
+void Remove1DProjectionDeprojectionUnitTest()
+{
+	uint64_t valuesPerSample = 2;
+	uint64_t numberOfSamples = 4;
+	uint64_t dimensionsToReduce = 1;
+	uint64_t batchSize = 2;
+
+
+	RFIMMemoryBlock* RFIMStruct = new RFIMMemoryBlock(valuesPerSample, numberOfSamples, dimensionsToReduce, batchSize);
+
+
+	uint64_t singleSignalLength = valuesPerSample * numberOfSamples;
+	uint64_t signalLength = singleSignalLength * batchSize;
+	uint64_t signalByteSize = sizeof(float) * signalLength;
+
+	float* h_signalCopy = (float*)malloc(signalByteSize);
+
+
+	//Set the signal
+	for(uint64_t i = 0; i < batchSize; ++i)
+	{
+		float* currentSignal = RFIMStruct->h_inputSignal + (i * singleSignalLength);
+		float* currentSignalCopy = h_signalCopy + (i * singleSignalLength);
+
+		currentSignal[0] = 32.0f;
+		currentSignalCopy[0] = currentSignal[0];
+
+		currentSignal[1] = 4.0f;
+		currentSignalCopy[1] = currentSignal[1];
+
+		currentSignal[2] = 18.0f;
+		currentSignalCopy[2] = currentSignal[2];
+
+
+		currentSignal[3] = 13.0f;
+		currentSignalCopy[3] = currentSignal[3];
+
+		currentSignal[4] = 93.0f;
+		currentSignalCopy[4] = currentSignal[4];
+
+		currentSignal[5] = 19.0f;
+		currentSignalCopy[5] = currentSignal[5];
+
+		currentSignal[6] = 28.0f;
+		currentSignalCopy[6] = currentSignal[6];
+
+
+		currentSignal[7] = 2.0f;
+		currentSignalCopy[7] = currentSignal[7];
+	}
+
+
+
+	//Calculate the covarianceMatrices
+	CalculateCovarianceMatrix(RFIMStruct);
+
+
+	//Calculate the eigenvectors/values
+	EigenvalueSolver(RFIMStruct);
+
+
+
+	//Allocate memory for the filtered signal
+	//float* h_filteredSignal = (float*)malloc(signalByteSize);
+
+
+	//Do the projection/reprojection
+	EigenReductionAndFiltering(RFIMStruct);
+
+
+
+	//print/check the results
+	for(uint64_t i = 0; i < batchSize; ++i)
+	{
+		float* originalSignal = h_signalCopy  + (i * singleSignalLength); //Copy of the original signal
+		float* currentFilteredSignal = RFIMStruct->h_inputSignal + (i * singleSignalLength); //Signal after projection/deprojection
+
+		for(uint64_t j = 0; j < valuesPerSample * numberOfSamples; ++j)
+		{
+			printf("originalSignal[%llu][%llu]: %f\n", i, j, originalSignal[j]);
+			printf("filteredSignal[%llu][%llu]: %f\n", i, j, currentFilteredSignal[j]);
+
+			/*
+			if(originalSignal[j] - currentFilteredSignal[j] > 0.000001f)
+			{
+				fprintf(stderr, "FilteringProductionHost unit test: results are different from expected!\n");
+				fprintf(stderr, "Expected %f, Actual: %f\n", originalSignal[j], currentFilteredSignal[j]);
+				exit(1);
+			}
+			*/
+		}
+	}
+
+
+
+	//Free all memory
+	free(h_signalCopy);
+
+
+	delete RFIMStruct;
+}
+
+
+
 //Pack and unpack filterbank files without doing RFIM
 //Tests to see if the unpack and pack functionality works correctly
 //The input and output filterbank files should be identical
 void PackingUnpackingUnitTest()
 {
 	uint32_t beamNum = 13;
-	uint32_t rawDataBlockNum = 10;
+	uint32_t rawDataBlockNum = 5;
 	uint32_t numberOfWorkerThreads = 10;
 	uint32_t windowSize = 15625;
 	uint32_t dimensionsToReduce = 0;

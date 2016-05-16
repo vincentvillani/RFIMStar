@@ -25,6 +25,8 @@ void EigenvectorSolverUnitTest();
 
 void ProjectionDeprojectionUnitTest();
 
+void Remove1DProjectionDeprojectionUnitTest();
+
 
 //Pack and unpack filterbank files without doing RFIM
 //Tests to see if the unpack and pack functionality works correctly
