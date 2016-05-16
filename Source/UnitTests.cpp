@@ -16,17 +16,17 @@
 #include "../Header/RFIMMemoryBlock.h"
 #include "../Header/WorkerThread.h"
 
-void RunAllUniTests()
+void RunAllUnitTests()
 {
 	MultiplexDemultiplexUnitTest();
 
-	MeanUnitTest();
-	CovarianceMatrixUnitTest();
+	//MeanUnitTest();
+	//CovarianceMatrixUnitTest();
 	EigenvectorSolverUnitTest();
-	ProjectionDeprojectionUnitTest();
-	Remove1DProjectionDeprojectionUnitTest();
+	//ProjectionDeprojectionUnitTest();
+	//Remove1DProjectionDeprojectionUnitTest();
 
-	PackingUnpackingUnitTest();
+	//PackingUnpackingUnitTest();
 
 	std::cout << "All unit tests complete!" << std::endl;
 }
@@ -322,6 +322,11 @@ void EigenvectorSolverUnitTest()
 	RFIMStruct->h_inputSignal[7] = 2;
 
 	CalculateCovarianceMatrix(RFIMStruct);
+
+	for(uint64_t i = 0; i < singleCovarianceMatrixLength * batchSize; ++i)
+	{
+		printf("EigenvectorSolverUnitTest[%llu]: %f\n", i, RFIMStruct->h_covarianceMatrix[i]);
+	}
 
 
 	//Compute the eigenvectors/values

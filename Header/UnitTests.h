@@ -12,7 +12,7 @@
 #include "RFIMStar.h"
 
 
-void RunAllUniTests();
+void RunAllUnitTests();
 
 
 void MultiplexDemultiplexUnitTest();

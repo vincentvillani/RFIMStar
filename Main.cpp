@@ -20,21 +20,21 @@ int main()
 {
 
 	//Unit tests
-	//RunAllUniTests();
+	RunAllUnitTests();
 
 
-
+/*
 	uint32_t beamNum = 13;
 	uint32_t rawDataBlockNum = 3;
 	uint32_t numberOfWorkerThreads = 10;
 	uint32_t windowSize = 15625;
-	uint32_t dimensionsToReduce = 1;
+	uint32_t dimensionsToReduce = 2;
 
 	std::string inputFilenamePrefix = "/lustre/projects/p002_swin/surveys/SUPERB/2016-01-05-12:07:06/";
 	std::string inputFilenamePostfix = "/2016-01-05-12:07:06.fil";
 
 	std::string outputFilenamePrefix = "/lustre/projects/p002_swin/vvillani/";
-	std::string outputFilenamePostfix = "a1-15625W.fil";
+	std::string outputFilenamePostfix = "a2-15625W.fil";
 
 	RFIMConfiguration configuration = RFIMConfiguration(numberOfWorkerThreads, windowSize, beamNum, dimensionsToReduce, rawDataBlockNum,
 			inputFilenamePrefix, inputFilenamePostfix,
@@ -45,7 +45,7 @@ int main()
 
 	std::cout << "Done!" << std::endl;
 
-
+	*/
 
 
 	return 0;
