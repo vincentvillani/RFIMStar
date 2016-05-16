@@ -7,7 +7,10 @@
 
 #include "../Header/RFIMMemoryBlock.h"
 
+#include <stdlib.h>
 #include <stdio.h>
+#include <new>
+#include <iostream>
 
 
 	RFIMMemoryBlock::RFIMMemoryBlock(uint64_t h_valuesPerSample, uint64_t h_numberOfSamples, uint64_t h_dimensionToReduce, uint64_t h_batchSize)
