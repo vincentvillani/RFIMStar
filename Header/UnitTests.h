@@ -15,6 +15,8 @@
 void RunAllUnitTests();
 
 
+void DetailedUnitTest();
+
 void MultiplexDemultiplexUnitTest();
 
 //Unit test to check that calculating the mean of a signal works correctly

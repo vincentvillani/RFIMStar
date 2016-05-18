@@ -54,6 +54,9 @@ public:
 	//float* h_VT;
 	//uint64_t h_VTBatchOffset;
 
+	//float* h_eigenvectorMatrix;
+	//uint64_t h_covarianceMatrixBatchOffset;
+
 	//Swaps the columns of the eigenvector matrix so its highest to lowest
 	//float* h_eigenvectorColumnSwapperMatrix;
 	//uint32_t h_eigenVectorColumnSwapperMatrixLength;

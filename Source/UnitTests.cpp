@@ -11,6 +11,7 @@
 #include <sstream>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 #include "../Header/RFIMHelperFunctions.h"
 #include "../Header/RFIMMemoryBlock.h"
@@ -18,6 +19,9 @@
 
 void RunAllUnitTests()
 {
+
+	//DetailedUnitTest();
+
 	//MultiplexDemultiplexUnitTest();
 
 	//MeanUnitTest();
@@ -26,10 +30,295 @@ void RunAllUnitTests()
 	//ProjectionDeprojectionUnitTest();
 	//Remove1DProjectionDeprojectionUnitTest();
 
-	//PackingUnpackingUnitTest();
+	PackingUnpackingUnitTest();
 
 	std::cout << "All unit tests complete!" << std::endl;
 }
+
+
+void DetailedUnitTest()
+{
+
+	uint32_t valuesPerSample = 2;
+	uint32_t sampleNum = 2;
+	uint32_t channelNum = 2;
+	uint32_t dimensionToReduce = 1;
+
+	uint32_t numberOfThreads = 2;
+
+	uint32_t nBits = 2;
+	uint32_t rawDataArrayLength = 4;
+	uint32_t filterbankByteSize = rawDataArrayLength / 2;
+
+
+
+	//OLD DATA
+	//[(0 3 2 1), (1 2 2 3), (0 2 1 1), (1 1 3 1)], [(3 3 1 1), (0 2 2 1), (3 1 0 2), (0 2 0 2)]
+
+	//Packed filterbank data
+	//[(0 3 2 1), (1 2 2 3)], [(3 3 1 1), (0 2 2 1)]
+
+	unsigned char rawPackedFilterbankOne[2];
+	rawPackedFilterbankOne[0] = 57;
+	rawPackedFilterbankOne[1] = 107;
+	//rawPackedFilterbankOne[2] = 37;
+	//rawPackedFilterbankOne[3] = 93;
+
+	unsigned char rawPackedFilterbankTwo[2];
+	rawPackedFilterbankTwo[0] = 245;
+	rawPackedFilterbankTwo[1] = 41;
+	//rawPackedFilterbankTwo[2] = 210;
+	//rawPackedFilterbankTwo[3] = 51;
+
+
+
+
+	RFIMConfiguration configuration = RFIMConfiguration(numberOfThreads, sampleNum, valuesPerSample,
+			dimensionToReduce, 1, "", "", "", "");
+	configuration.channelNum = channelNum; //USUALLY SET BY READING FILTERBANK FILES
+	configuration.numBitsPerSample = nBits; //USUALLY SET BY READING FILTERBANK FILES
+
+
+
+	//Copy the filterbank data across to the raw data block
+	RawDataBlock rawDataBlock = RawDataBlock(0, rawDataArrayLength, nBits);
+	memcpy(rawDataBlock.packedRawData, rawPackedFilterbankOne, filterbankByteSize);
+	memcpy(rawDataBlock.packedRawData + filterbankByteSize, rawPackedFilterbankTwo, filterbankByteSize);
+	rawDataBlock.usedDataLength = rawDataArrayLength;
+
+
+
+
+	RFIMMemoryBlock rfimMemoryBlockOne = RFIMMemoryBlock(valuesPerSample, sampleNum, dimensionToReduce, channelNum);
+	RFIMMemoryBlock rfimMemoryBlockTwo = RFIMMemoryBlock(valuesPerSample, sampleNum, dimensionToReduce, channelNum);
+
+
+	//Unpack the data
+	WorkerThreadUnpackData(0, &rawDataBlock, &rfimMemoryBlockOne, &configuration);
+	WorkerThreadUnpackData(1, &rawDataBlock, &rfimMemoryBlockTwo, &configuration);
+
+
+
+	//Print out the unpacked data for block one
+	//Should be (0 3 2 1), (3 3 1 1)
+	for(uint32_t i = 0; i < sampleNum * channelNum * valuesPerSample; ++i)
+	{
+		printf("UnpackedBlockOne[%llu]: %f\n", i, rfimMemoryBlockOne.h_outputSignal[i]);
+	}
+
+	printf("\n");
+
+	//Print out the unpacked data for block two
+	//Should be (1 2 2 3), (0 2 2 1)
+	for(uint32_t i = 0; i < sampleNum * channelNum * valuesPerSample; ++i)
+	{
+		printf("UnpackedBlockTwo[%llu]: %f\n", i, rfimMemoryBlockTwo.h_outputSignal[i]);
+	}
+
+
+	printf("\n");
+
+	//Multiplex the data
+	WorkerThreadMultiplexData(&rfimMemoryBlockOne, &configuration);
+	WorkerThreadMultiplexData(&rfimMemoryBlockTwo, &configuration);
+
+
+
+	//Print out the multiplexed data
+
+	for(uint32_t i = 0; i < sampleNum * channelNum * valuesPerSample; ++i)
+	{
+		printf("MultiplexedBlockOne[%llu]: %f\n", i, rfimMemoryBlockOne.h_inputSignal[i]);
+	}
+
+	printf("\n");
+
+	for(uint32_t i = 0; i < sampleNum * channelNum * valuesPerSample; ++i)
+	{
+		printf("MultiplexedBlockTwo[%llu]: %f\n", i, rfimMemoryBlockTwo.h_inputSignal[i]);
+	}
+
+
+	//RFIM
+	//Calculate the window size (AKA number of samples in RFIMStar jargon) of this iteration,
+	//most of the time it will always be the same, unless we are at the end of the
+	//filterbank files
+	//This is so when we do RFIM we ignore samples that don't exist as we reach near the end of a file
+	rfimMemoryBlockOne.h_numberOfSamples = (8 * (rawDataBlock.usedDataLength / configuration.beamNum)) /
+			(configuration.channelNum * configuration.numberOfWorkerThreads * configuration.numBitsPerSample);
+	rfimMemoryBlockTwo.h_numberOfSamples = (8 * (rawDataBlock.usedDataLength / configuration.beamNum)) /
+			(configuration.channelNum * configuration.numberOfWorkerThreads * configuration.numBitsPerSample);
+
+
+
+
+
+
+	//Calculate the covariance matrices
+	CalculateCovarianceMatrix(&rfimMemoryBlockOne);
+	CalculateCovarianceMatrix(&rfimMemoryBlockTwo);
+
+	printf("\n");
+
+	//print out the covariance matrices
+	for(uint32_t i = 0; i < channelNum; ++i)
+	{
+		uint32_t covOffset = i * valuesPerSample * valuesPerSample;
+
+		for(uint32_t j = 0; j < valuesPerSample * valuesPerSample; ++j)
+		{
+			printf("CovMatBlockOne[%llu][%llu]: %f\n", i, j, rfimMemoryBlockOne.h_covarianceMatrix[covOffset + j]);
+		}
+
+	}
+
+	printf("\n");
+
+	for(uint32_t i = 0; i < channelNum; ++i)
+	{
+		uint32_t covOffset = i * valuesPerSample * valuesPerSample;
+
+		for(uint32_t j = 0; j < valuesPerSample * valuesPerSample; ++j)
+		{
+			printf("CovMatBlockTwo[%llu][%llu]: %f\n", i, j, rfimMemoryBlockTwo.h_covarianceMatrix[covOffset + j]);
+		}
+
+	}
+
+
+	printf("\n");
+
+
+
+
+
+	//Solve for eigenvalues
+	EigenvalueSolver(&rfimMemoryBlockOne);
+	EigenvalueSolver(&rfimMemoryBlockTwo);
+
+
+
+	//print out the eigenvectors
+	for(uint32_t i = 0; i < channelNum; ++i)
+	{
+		uint32_t covOffset = i * valuesPerSample * valuesPerSample;
+
+		for(uint32_t j = 0; j < valuesPerSample * valuesPerSample; ++j)
+		{
+			printf("EigenMatBlockOne[%llu][%llu]: %f\n", i, j, rfimMemoryBlockOne.h_covarianceMatrix[covOffset + j]);
+		}
+
+	}
+
+	printf("\n");
+
+	for(uint32_t i = 0; i < channelNum; ++i)
+	{
+		uint32_t covOffset = i * valuesPerSample * valuesPerSample;
+
+		for(uint32_t j = 0; j < valuesPerSample * valuesPerSample; ++j)
+		{
+			printf("EigenMatBlockTwo[%llu][%llu]: %f\n", i, j, rfimMemoryBlockTwo.h_covarianceMatrix[covOffset + j]);
+		}
+
+	}
+
+
+	printf("\n");
+
+
+
+
+
+	//Do projection and deprojection
+	EigenReductionAndFiltering(&rfimMemoryBlockOne);
+	EigenReductionAndFiltering(&rfimMemoryBlockTwo);
+
+
+	//Print out the signal after
+	for(uint32_t j = 0; j < valuesPerSample * sampleNum * channelNum; ++j)
+	{
+		printf("FilteredMatBlockOne[%llu]: %f\n", j, rfimMemoryBlockOne.h_inputSignal[j]);
+	}
+
+	printf("\n");
+
+	for(uint32_t j = 0; j < valuesPerSample * sampleNum * channelNum; ++j)
+	{
+		printf("FilteredMatBlockTwo[%llu]: %f\n", j, rfimMemoryBlockTwo.h_inputSignal[j]);
+	}
+
+	printf("\n");
+
+
+
+	//DeMmutliplex the signal
+	WorkerThreadDeMultiplexData(&rfimMemoryBlockOne, &configuration);
+	WorkerThreadDeMultiplexData(&rfimMemoryBlockTwo, &configuration);
+
+	//Print out the signals
+
+	for(uint32_t i = 0; i < sampleNum * channelNum * valuesPerSample; ++i)
+	{
+		printf("DemultiplexBlockOne[%llu]: %f\n", i, rfimMemoryBlockOne.h_outputSignal[i]);
+	}
+
+	printf("\n");
+
+	//Print out the unpacked data for block two
+	for(uint32_t i = 0; i < sampleNum * channelNum * valuesPerSample; ++i)
+	{
+		printf("DemultiplexBlockTwo[%llu]: %f\n", i, rfimMemoryBlockTwo.h_outputSignal[i]);
+	}
+
+
+	printf("\n");
+
+	//Pack the data back into the raw data block
+	WorkerThreadPackData(0, &rawDataBlock, &rfimMemoryBlockOne, &configuration);
+	WorkerThreadPackData(1, &rawDataBlock, &rfimMemoryBlockTwo, &configuration);
+
+	//Print packed data chars
+	for(uint32_t i = 0; i < rawDataArrayLength; ++i)
+	{
+		printf("packedDataChars[%lu]: %u\n", i, rawDataBlock.packedRawData[i]);
+	}
+
+	printf("\n");
+
+	//Copy the packed data into the temp block, unpack it again and print it out
+	RawDataBlock tempRawDataBlock = RawDataBlock(0, rawDataArrayLength, nBits);
+	tempRawDataBlock.usedDataLength = rawDataArrayLength;
+	RFIMMemoryBlock tempRFIMBlock1 = RFIMMemoryBlock(valuesPerSample, sampleNum, dimensionToReduce, channelNum);
+	RFIMMemoryBlock tempRFIMBlock2 = RFIMMemoryBlock(valuesPerSample, sampleNum, dimensionToReduce, channelNum);
+
+	memcpy(tempRawDataBlock.packedRawData, rawDataBlock.packedRawData, rawDataArrayLength);
+
+	WorkerThreadUnpackData(0, &tempRawDataBlock, &tempRFIMBlock1, &configuration);
+	WorkerThreadUnpackData(1, &tempRawDataBlock, &tempRFIMBlock2, &configuration);
+
+	//Print the packed->unpacked data
+	//Print out the unpacked data for block one
+	for(uint32_t i = 0; i < sampleNum * channelNum * valuesPerSample; ++i)
+	{
+		printf("OutputBlockOne[%llu]: %f\n", i, tempRFIMBlock1.h_outputSignal[i]);
+	}
+
+	printf("\n");
+
+	//Print out the unpacked data for block two
+	for(uint32_t i = 0; i < sampleNum * channelNum * valuesPerSample; ++i)
+	{
+		printf("OutputBlockTwo[%llu]: %f\n", i, tempRFIMBlock2.h_outputSignal[i]);
+	}
+
+
+	//RFIM(&rfimMemoryBlockOne);
+	//RFIM(&rfimMemoryBlockTwo);
+
+
+}
+
 
 
 
@@ -543,7 +832,7 @@ void Remove1DProjectionDeprojectionUnitTest()
 {
 	uint64_t valuesPerSample = 2;
 	uint64_t numberOfSamples = 4;
-	uint64_t dimensionsToReduce = 2;
+	uint64_t dimensionsToReduce = 1;
 	uint64_t batchSize = 0;
 
 

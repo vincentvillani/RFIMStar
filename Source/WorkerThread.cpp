@@ -10,6 +10,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <algorithm>
 
 #include "../Header/RFIMHelperFunctions.h"
 
@@ -105,8 +106,9 @@ void pack(unsigned char* buffer, unsigned char* outbuffer, int nbits, int nbytes
 		break;
 
 		case 2:
-		for(ii=0;ii<nbytes/bitfact; ++ii)
+		for(ii=0;ii<nbytes/bitfact; ++ii) //for(ii=0;ii<nbytes/bitfact; ++ii)
 		{
+			//printf("Running\n");
 			pos = ii*4;
 
 			val = (buffer[pos]<<6) |
@@ -408,10 +410,16 @@ void WorkerThreadPackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock, R
 	//Interpret the output data as chars
 	//TODO: add this back? rfimMemoryBlock->h_numberOfSamples instead of configuration->windowSize
 	uint64_t totalSignalLength = rfimMemoryBlock->h_valuesPerSample * configuration->windowSize * rfimMemoryBlock->h_batchSize;
+	float maxValue = (uint64_t)powf(2, configuration->numBitsPerSample);
+
+
 	for(uint64_t i = 0; i < totalSignalLength; ++i)
 	{
 		//MAKE SURE IT'S ROUNDED UP OR DOWN APPROPRIATELY
-		outputCharData[i] = (rfimMemoryBlock->h_outputSignal[i] + 0.5f);
+		//MAKE SURE IT'S WITHIN THE RANGE OF THE NBITS
+		//BOUND IT IF IT'S NOT?
+		//min(max(0, val), maxValue)
+		outputCharData[i] =  std::min( std::max(0.0f, (rfimMemoryBlock->h_outputSignal[i] + 0.5f)), maxValue);
 	}
 
 
@@ -431,6 +439,17 @@ void WorkerThreadPackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock, R
 	uint64_t threadFilterbankByteSize = (oneFilterbankByteSize / configuration->numberOfWorkerThreads);
 	uint64_t threadStartingOffset = (oneFilterbankByteSize / configuration->numberOfWorkerThreads) * workerThreadID;
 
+	/*
+	printf("workerThreadID: %llu\n", workerThreadID);
+	printf("TotalSignalLength: %llu\n", totalSignalLength);
+	printf("outputCharDataOffset: %llu\n", outputCharDataOffset);
+	printf("oneFilterbankByteSize: %llu\n", oneFilterbankByteSize);
+	printf("threadFilterbankByteSize: %llu\n", threadFilterbankByteSize);
+	printf("threadStartingOffset: %llu\n", threadStartingOffset);
+	printf("configuration->beamNum: %lu\n", configuration->beamNum);
+	printf("configuration->numBitsPerSample: %lu\n\n", configuration->numBitsPerSample);
+	*/
+
 
 	//For each filterbank beam, pack the processed data
 	for(uint32_t i = 0; i < configuration->beamNum; ++i)
@@ -439,7 +458,7 @@ void WorkerThreadPackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock, R
 		//pack data back into the filterbank format required
 		pack(outputCharData + (i * outputCharDataOffset),
 				rawDataBlock->packedRawData + (i * oneFilterbankByteSize) + threadStartingOffset,
-				configuration->numBitsPerSample, threadFilterbankByteSize);
+				configuration->numBitsPerSample, outputCharDataOffset);
 
 	}
 

@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <new>
 #include <iostream>
-
+#include <string.h>
 
 	RFIMMemoryBlock::RFIMMemoryBlock(uint64_t h_valuesPerSample, uint64_t h_numberOfSamples, uint64_t h_dimensionToReduce, uint64_t h_batchSize)
 	{
@@ -129,11 +129,42 @@
 		}
 
 
+
+		//Should be the same length as the covariance matrices
+		//float* h_eigenvectorMatrix = new (std::nothrow) float[covarianceMatrixLength];
+		//uint64_t h_covarianceMatrixBatchOffset = this->h_covarianceMatrixBatchOffset;
+
+
+
+		/*
 		//Allocate memory for the column swapper matrix
-		//this->h_eigenVectorColumnSwapperMatrixLength = h_valuesPerSample * h_valuesPerSample;
-		//this->h_eigenvectorColumnSwapperMatrix = new float[this->h_eigenVectorColumnSwapperMatrixLength];
+		this->h_eigenVectorColumnSwapperMatrixLength = h_valuesPerSample * h_valuesPerSample;
+		this->h_eigenvectorColumnSwapperMatrix = new (std::nothrow) float[this->h_eigenVectorColumnSwapperMatrixLength];
 
+		if(this->h_eigenvectorColumnSwapperMatrix == NULL)
+		{
+			fprintf(stderr, "RFIMMemoryBlock::RFIMMemoryBlock(): Error allocating memory %llu bytes for h_eigenvectorColumnSwapperMatrix\n",
+											sizeof(float) * h_eigenVectorColumnSwapperMatrixLength);
+			exit(1);
+		}
 
+		//Set the column swapper matrix
+		//Set everything to zero
+		memset(h_eigenvectorColumnSwapperMatrix, 0, h_eigenVectorColumnSwapperMatrixLength * sizeof(float));
+
+		//Make a mirror image of the identity matrix, I.E.
+		//0 0 1
+		//0 1 0
+		//1 0 0
+		uint64_t offset = h_valuesPerSample - 1;
+		uint32_t index = offset;
+		for(uint64_t i = 0; i < h_valuesPerSample;  ++i)
+		{
+			h_eigenvectorColumnSwapperMatrix[index] = 1;
+
+			index += offset;
+		}
+		*/
 
 
 		//Projected signal
