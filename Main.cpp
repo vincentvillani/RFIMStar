@@ -32,7 +32,7 @@ int main()
 	uint32_t rawDataBlockNum = 2;
 	uint32_t numberOfWorkerThreads = 10;
 	uint32_t windowSize = 15625;
-	uint32_t dimensionsToReduce = 1;
+	uint32_t dimensionsToReduce = 2;
 
 	std::string inputFilenamePrefix = "/lustre/projects/p002_swin/surveys/SUPERB/2016-01-05-12:07:06/";
 	std::string inputFilenamePostfix = "/2016-01-05-12:07:06.fil";

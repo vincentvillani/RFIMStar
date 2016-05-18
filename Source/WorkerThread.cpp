@@ -410,7 +410,7 @@ void WorkerThreadPackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock, R
 	//Interpret the output data as chars
 	//TODO: add this back? rfimMemoryBlock->h_numberOfSamples instead of configuration->windowSize
 	uint64_t totalSignalLength = rfimMemoryBlock->h_valuesPerSample * configuration->windowSize * rfimMemoryBlock->h_batchSize;
-	float maxValue = (uint64_t)powf(2, configuration->numBitsPerSample);
+	float maxValue = powf(2, configuration->numBitsPerSample) - 1.0f;
 
 
 	for(uint64_t i = 0; i < totalSignalLength; ++i)
@@ -418,8 +418,8 @@ void WorkerThreadPackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock, R
 		//MAKE SURE IT'S ROUNDED UP OR DOWN APPROPRIATELY
 		//MAKE SURE IT'S WITHIN THE RANGE OF THE NBITS
 		//BOUND IT IF IT'S NOT?
-		//min(max(0, val), maxValue)
-		outputCharData[i] =  std::min( std::max(0.0f, (rfimMemoryBlock->h_outputSignal[i] + 0.5f)), maxValue);
+		//(std::min(std::max(value, 0.0f), maxValue) + 0.5f);
+		outputCharData[i] =  (std::min( std::max( rfimMemoryBlock->h_outputSignal[i], 0.0f ), maxValue) + 0.5f);
 	}
 
 
