@@ -31,6 +31,8 @@ void ProjectionDeprojectionUnitTest();
 
 void Remove1DProjectionDeprojectionUnitTest();
 
+void PCAUnitTest();
+
 //Pack and unpack filterbank files without doing RFIM
 //Tests to see if the unpack and pack functionality works correctly
 //The input and output filterbank files should be identical

@@ -73,6 +73,10 @@ void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderT
 		readerThreadLockGuard.unlock();
 
 
+		//	uint64_t bytesToReadPerFilterbank = (RFIMConfig->windowSize * RFIMConfig->channelNum *
+		//RFIMConfig->numberOfWorkerThreads * RFIMConfig->numBitsPerSample) / 8;
+
+		//printf("Per filterbank length: %llu\n", bytesToReadPerFilterbank);
 
 		//Read in filterbank data
 		for(uint32_t i = 0; i < filterbankVector.size(); ++i)

@@ -70,8 +70,11 @@ void RFIMStarRoutine(RFIMConfiguration* configuration)
 
 	//Allocate raw data block memory
 	std::vector<RawDataBlock*> rawDataBlockVector;
-	uint64_t rawDataBlockArrayLength = (configuration->numberOfWorkerThreads * configuration->beamNum * configuration->windowSize *
-			configuration->channelNum * configuration->numBitsPerSample) / 8;
+	uint64_t rawDataBlockArrayLength = ((configuration->numberOfWorkerThreads * configuration->windowSize *
+			configuration->channelNum * configuration->numBitsPerSample) / 8) * configuration->beamNum;
+
+	//printf("rawDataTotal: %llu\n", rawDataBlockArrayLength);
+
 
 
 	for(uint32_t i = 0; i < configuration->rawDataBlockNum; ++i)

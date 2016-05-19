@@ -20,6 +20,8 @@
 void RunAllUnitTests()
 {
 
+
+	//PCAUnitTest();
 	//DetailedUnitTest();
 
 	//MultiplexDemultiplexUnitTest();
@@ -30,10 +32,73 @@ void RunAllUnitTests()
 	//ProjectionDeprojectionUnitTest();
 	//Remove1DProjectionDeprojectionUnitTest();
 
-	PackingUnpackingUnitTest();
+	//PackingUnpackingUnitTest();
 
 	std::cout << "All unit tests complete!" << std::endl;
 }
+
+
+void PCAUnitTest()
+{
+	float data[20];
+	data[0] = 0.69f;
+	data[1] = 0.49f;
+	data[2] = -1.31f;
+	data[3] = -1.21f;
+	data[4] = 0.39f;
+	data[5] = 0.99f;
+	data[6] = 0.09f;
+	data[7] = 0.29f;
+	data[8] = 1.29f;
+	data[9] = 1.09f;
+	data[10] = 0.49f;
+	data[11] = 0.79f;
+	data[12] = 0.19f;
+	data[13] = -0.31f;
+	data[14] = -0.81f;
+	data[15] = -0.81f;
+	data[16] = -0.31f;
+	data[17] = -0.31f;
+	data[18] = -0.71f;
+	data[19] = -1.01f;
+
+
+	float eigenvectorDecendingSignificance[4];
+	eigenvectorDecendingSignificance[0] = -0.667873399f;
+	eigenvectorDecendingSignificance[1] = -0.735178656f;
+	eigenvectorDecendingSignificance[2] = -0.735178656f;
+	eigenvectorDecendingSignificance[3] = 0.667873399f;
+
+
+	/*
+	float eigenvectorAcendingSignificance[4];
+	eigenvectorAcendingSignificance[0] = -0.735178656f;
+	eigenvectorAcendingSignificance[1] = 0.667873399f;
+	eigenvectorAcendingSignificance[2] = -0.667873399f;
+	eigenvectorAcendingSignificance[3] = -0.735178656f;
+	*/
+
+
+	uint32_t valuesPerSample = 2;
+	uint32_t numberOfSamples = 10;
+	//uint32_t
+
+
+	RFIMMemoryBlock rfimMem = RFIMMemoryBlock(valuesPerSample, numberOfSamples, 1, 1);
+	memcpy(rfimMem.h_covarianceMatrix, &eigenvectorDecendingSignificance, sizeof(float) * 4);
+	memcpy(rfimMem.h_inputSignal, &data, sizeof(float) * 20);
+
+	//Print out the deprojected results inside this method
+	EigenReductionAndFiltering(&rfimMem);
+
+
+	for(uint32_t i = 0; i < 20; ++i)
+	{
+		printf("PCAUnitTest: Deprojected[%lu]: %f\n", i,  rfimMem.h_inputSignal[i]);
+	}
+
+}
+
 
 
 void DetailedUnitTest()

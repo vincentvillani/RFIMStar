@@ -299,6 +299,7 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 				RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset), RFIMStruct->h_valuesPerSample, beta,
 				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
 
+
 		/*
 		//TODO: Debug, REMOVE
 		for(uint64_t j = 0; j < RFIMStruct->h_valuesPerSample * RFIMStruct->h_numberOfSamples; ++j)
@@ -308,6 +309,7 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 
 		printf("\n");
 		*/
+
 
 		//BEFORE
 		//Do the reprojection back

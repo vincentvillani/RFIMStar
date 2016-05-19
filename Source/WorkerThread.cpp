@@ -419,7 +419,7 @@ void WorkerThreadPackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock, R
 		//MAKE SURE IT'S WITHIN THE RANGE OF THE NBITS
 		//BOUND IT IF IT'S NOT?
 		//(std::min(std::max(value, 0.0f), maxValue) + 0.5f);
-		outputCharData[i] =  (std::min( std::max( rfimMemoryBlock->h_outputSignal[i], 0.0f ), maxValue) + 0.5f);
+		outputCharData[i] =  (std::min( std::max( (rfimMemoryBlock->h_outputSignal[i] + 0.5f), 0.0f ), maxValue));
 	}
 
 
