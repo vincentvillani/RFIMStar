@@ -32,7 +32,7 @@ void RunAllUnitTests()
 	//ProjectionDeprojectionUnitTest();
 	//Remove1DProjectionDeprojectionUnitTest();
 
-	//PackingUnpackingUnitTest();
+	PackingUnpackingUnitTest();
 
 	std::cout << "All unit tests complete!" << std::endl;
 }
@@ -1004,7 +1004,7 @@ void PackingUnpackingUnitTest()
 {
 	uint32_t beamNum = 13;
 	uint32_t rawDataBlockNum = 2;
-	uint32_t numberOfWorkerThreads = 10;
+	uint32_t numberOfWorkerThreads = 14;
 	uint32_t windowSize = 15625;
 	uint32_t dimensionsToReduce = 0;
 

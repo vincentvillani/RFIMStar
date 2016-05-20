@@ -192,6 +192,40 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 		threadData->workQueue.pop();
 		lockGuard.unlock();
 
+		//Check if there is any actual work to do?
+		//Calculate the total number of samples that the block contains (this can change if it is near the end of the file)
+		//Calculate if there is any work for this worker thread to do
+		uint64_t totalSamplesInRawDataBlock = (rawData->usedDataLength * 8) /
+				(configuration->channelNum * configuration->beamNum * configuration->numBitsPerSample);
+		uint64_t threadSampleOffset = workerThreadID * configuration->windowSize;
+		uint64_t sampleDifference = totalSamplesInRawDataBlock - threadSampleOffset;
+
+		//If it is greater than zero, then there is work to be done
+		//Calculate how much should be done
+		if(sampleDifference > 0)
+		{
+			//Make sure the samples are bounded by the max window size
+			rfimMemoryBlock->h_numberOfSamples = std::min((uint64_t)configuration->windowSize, sampleDifference);
+
+			printf("threadID: %llu\n", workerThreadID);
+			printf("numberOfSamples: %llu\n", rfimMemoryBlock->h_numberOfSamples);
+			printf("usedDataLength: %llu\n\n", rawData->usedDataLength);
+		}
+		else //There is no work to do! Let the writer thread know your done
+		{
+			printf("threadID: %llu\n", workerThreadID);
+			printf("numberOfSamples: %llu\n", 0);
+			printf("usedDataLength: %llu\n\n", rawData->usedDataLength);
+
+			//Is this the last block we should process?
+			shouldShutdown = rawData->isLastBlock;
+
+			//Pass to the writer thread
+			masterMailbox->workerWriterMailbox->Worker_NotifyFinishedWithBlock(rawData);
+
+			break; //Skip everything else in this loop and shutdown
+		}
+
 
 		//Unpack the data for use
 		WorkerThreadUnpackData(workerThreadID, rawData, rfimMemoryBlock, configuration);
@@ -206,8 +240,9 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 		//most of the time it will always be the same, unless we are at the end of the
 		//filterbank files
 		//This is so when we do RFIM we ignore samples that don't exist as we reach near the end of a file
-		rfimMemoryBlock->h_numberOfSamples = (8 * (rawData->usedDataLength / configuration->beamNum)) /
-				(configuration->channelNum * configuration->numberOfWorkerThreads * configuration->numBitsPerSample);
+		//rfimMemoryBlock->h_numberOfSamples = (8 * (rawData->usedDataLength / configuration->beamNum)) /
+		//		(configuration->channelNum * configuration->numberOfWorkerThreads * configuration->numBitsPerSample);
+
 
 
 		//Run RFIM
@@ -318,9 +353,8 @@ void WorkerThreadMultiplexData(RFIMMemoryBlock* rfimMemoryBlock, RFIMConfigurati
 				//printf("outputSignalIndex: %llu\n\n", (b * outputBeamOffset) + currentInputTimeSampleOffset + f);
 
 				rfimMemoryBlock->h_inputSignal[currentInputFreqChannelOffset + currentInputTimeSampleOffset + b] =
-						rfimMemoryBlock->h_outputSignal[
-							(b * (configuration->channelNum * configuration->windowSize)) + t * configuration->channelNum + f
-							];
+					rfimMemoryBlock->h_outputSignal[(b * (configuration->channelNum * configuration->windowSize)) +
+													t * configuration->channelNum + f];
 
 			}
 		}

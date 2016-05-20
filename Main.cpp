@@ -11,9 +11,10 @@
 #include "Header/UnitTests.h"
 
 
+//TODO: Figure out what's going wrong at the end of the RFIM routine
+//TODO: Make the configuration be setup by passing arguments to the program via the command line
 //TODO: What if the values go above or below a the range that the bits can represent? (DO I FIND THE MIN AND MAX AND MAP IT?, OR JUST CLAMP?)
 //TODO: insert signals into the actual filterbank files
-//TODO: Make the configuration be setup by passing arguments to the program via the command line
 //TODO: Calculate how many dimensions to reduce at run-time, rather than a hardcoded 1
 //TODO: Unit test for memory leaks
 //TODO: Add the ability to read in and write out different nbit values
@@ -21,10 +22,10 @@ int main()
 {
 
 	//Unit tests
-	//RunAllUnitTests();
+	RunAllUnitTests();
 
 
-
+	/*
 	uint32_t beamNum = 13;
 	uint32_t rawDataBlockNum = 3;
 	uint32_t numberOfWorkerThreads = 14;
@@ -46,7 +47,7 @@ int main()
 
 	std::cout << "Done!" << std::endl;
 
-
+	*/
 
 
 
