@@ -28,11 +28,11 @@ void RunAllUnitTests()
 
 	//MeanUnitTest();
 	//CovarianceMatrixUnitTest();
-	//EigenvectorSolverUnitTest();
+	EigenvectorSolverUnitTest();
 	//ProjectionDeprojectionUnitTest();
 	//Remove1DProjectionDeprojectionUnitTest();
 
-	PackingUnpackingUnitTest();
+	//PackingUnpackingUnitTest();
 
 	std::cout << "All unit tests complete!" << std::endl;
 }
@@ -690,14 +690,14 @@ void EigenvectorSolverUnitTest()
 
 	//Check against expected results
 	float eigenvalueExpectedResults[2];
-	eigenvalueExpectedResults[0] = 890.960f;
-	eigenvalueExpectedResults[1] = 23.978f;
+	eigenvalueExpectedResults[0] = 23.978f;
+	eigenvalueExpectedResults[1] = 890.960f;
 
 	float eigenvectorExpectedResults[4];
-	eigenvectorExpectedResults[0] = 0.986f;
-	eigenvectorExpectedResults[1] = 0.164f;
-	eigenvectorExpectedResults[2] = -0.164f;
-	eigenvectorExpectedResults[3] = 0.986f;
+	eigenvectorExpectedResults[0] = -0.164f;
+	eigenvectorExpectedResults[1] = 0.986f;
+	eigenvectorExpectedResults[2] = 0.986f;
+	eigenvectorExpectedResults[3] = 0.164f;
 
 
 
@@ -727,13 +727,13 @@ void EigenvectorSolverUnitTest()
 
 
 
-		/*
+
 		if(failed)
 		{
 			fprintf(stderr, "EigendecompProduction unit test: eigenvalues are not being computed properly!\n");
-			exit(1);
+			//exit(1);
 		}
-		*/
+
 	}
 
 
@@ -770,13 +770,13 @@ void EigenvectorSolverUnitTest()
 		}
 
 
-		/*
+
 		if(failed)
 		{
 			fprintf(stderr, "EigendecompProduction unit test: eigenvectors are not being computed properly!\n");
-			exit(1);
+			//exit(1);
 		}
-		*/
+
 	}
 
 
