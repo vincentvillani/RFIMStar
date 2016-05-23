@@ -12,6 +12,7 @@
 
 WorkerThreadData::WorkerThreadData()
 {
+	numberOfDimensionsRemoved = 0;
 }
 
 

@@ -72,6 +72,9 @@ public:
 	uint64_t h_outputSignalBatchOffset;
 
 
+	uint64_t h_numberOfDimensionsRemovedDuringProjection;
+
+
 	//Constructors
 	RFIMMemoryBlock(uint64_t h_valuesPerSample, uint64_t h_numberOfSamples, uint64_t h_dimensionToReduce, uint64_t h_batchSize);
 	~RFIMMemoryBlock();

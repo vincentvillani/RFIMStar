@@ -221,7 +221,7 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 			shouldShutdown = rawData->isLastBlock;
 
 			//Pass to the writer thread
-			masterMailbox->workerWriterMailbox->Worker_NotifyFinishedWithBlock(rawData);
+			masterMailbox->workerWriterMailbox->Worker_NotifyFinishedWithBlock(rawData, 0);
 
 			break; //Skip everything else in this loop and shutdown
 		}
@@ -253,7 +253,7 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 
 
 		//Pass to the writer thread
-		masterMailbox->workerWriterMailbox->Worker_NotifyFinishedWithBlock(rawData);
+		masterMailbox->workerWriterMailbox->Worker_NotifyFinishedWithBlock(rawData, rfimMemoryBlock->h_numberOfDimensionsRemovedDuringProjection);
 
 	}
 

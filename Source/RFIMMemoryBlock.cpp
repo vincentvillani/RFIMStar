@@ -153,6 +153,9 @@
 			exit(1);
 		}
 
+
+		this->h_numberOfDimensionsRemovedDuringProjection = 0;
+
 	}
 
 

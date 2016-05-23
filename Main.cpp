@@ -19,7 +19,7 @@
 //TODO: Unit test for memory leaks
 //TODO: Add the ability to read in and write out different nbit values
 //TODO: Do a normalisation step before computing the covariance matrix, to see if there are any huge outliers, if there are, replace it with white noise or zeroes?
-		//Median absolute deviation (MAD) to normalise
+		//Median absolute deviation (MAD) to normalise. Don't actually normalise the data, only use it to identify samples to remove
 //TODO: insert signals into the actual filterbank files
 int main()
 {
@@ -39,7 +39,7 @@ int main()
 	std::string inputFilenamePostfix = "/2016-01-05-12:07:06.fil";
 
 	std::string outputFilenamePrefix = "/lustre/projects/p002_swin/vvillani/";
-	std::string outputFilenamePostfix = "pna1-15625W.fil";
+	std::string outputFilenamePostfix = "pnva1-15625W.fil";
 
 	RFIMConfiguration configuration = RFIMConfiguration(numberOfWorkerThreads, windowSize, beamNum, dimensionsToReduce, rawDataBlockNum,
 			inputFilenamePrefix, inputFilenamePostfix,

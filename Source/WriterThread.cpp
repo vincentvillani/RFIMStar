@@ -89,6 +89,11 @@ void WriterThreadMain(WriterThreadData* writerThreadData, RFIMConfiguration* con
 
 		//if(currentRawDataBlock->isLastBlock)
 		std::cout << "Block is writing " << bytesToWritePerFilterbank * configuration->beamNum << " bytes..." << std::endl;
+		std::cout << "Dimensions removed from this block: " << currentRawDataBlock->numberOfDimensionsRemoved << std::endl;
+
+
+		//Reset the dimensions to remove variable
+		currentRawDataBlock->numberOfDimensionsRemoved = 0;
 
 		//std::cout << "WriterThread: Writing data..." << std::endl;
 

@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
+#include <math.h>
 
 #ifdef BUILD_WITH_MKL
 #include <mkl.h>
@@ -203,12 +204,72 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 	float beta = 0;
 
 
+	//Reset dimensions removed
+	RFIMStruct->h_numberOfDimensionsRemovedDuringProjection = 0;
+
 
 
 	for(uint64_t i = 0; i < RFIMStruct->h_batchSize; ++i)
 	{
 
-		//1. Put all the signals into the eigenvector space. E(t)S
+		//1. Is there any RFI here?
+
+		//TODO: Can you just add the diagonal of the covariance matrix?
+		//Calculate the variance of the signal
+		float signalSquared = cblas_sdot(RFIMStruct->h_valuesPerSample * RFIMStruct->h_numberOfSamples,
+				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), 1,
+				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), 1);
+
+		signalSquared /= RFIMStruct->h_valuesPerSample * RFIMStruct->h_numberOfSamples;
+
+		float meanSquared = cblas_sasum(RFIMStruct->h_valuesPerSample * RFIMStruct->h_numberOfSamples,
+				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), 1);
+
+		meanSquared /= RFIMStruct->h_valuesPerSample * RFIMStruct->h_numberOfSamples;
+		meanSquared = powf(meanSquared, 2.0f);
+
+		float variance = signalSquared - meanSquared;
+
+
+		//Calculate the scale factors
+
+
+		//Find the average of the eigenvalues that we are not going to scale
+		float eigenvalueAverage = 0;
+		uint32_t numberOfDimensionsToRemove = 0;
+
+		for(uint64_t j = 0; j < RFIMStruct->h_valuesPerSample; ++j)
+		{
+
+			//TODO: Find a better detection technique of variance!
+			//If this eigenvalues is greater than the variance, we can assume that this dimensions contains RFI
+			if(RFIMStruct->h_S[ (i * RFIMStruct->h_SBatchOffset) + j ] > variance * 2)
+			{
+				numberOfDimensionsToRemove += 1;
+			}
+			else //Add it to the average
+			{
+				eigenvalueAverage += RFIMStruct->h_S[ (i * RFIMStruct->h_SBatchOffset) + j ];
+			}
+
+		}
+
+		//There is not enough RFI here, go to the next frequency channel
+		if(numberOfDimensionsToRemove == 0)
+			continue;
+
+
+
+		//Update the number of dimensions removed
+		RFIMStruct->h_numberOfDimensionsRemovedDuringProjection += numberOfDimensionsToRemove;
+
+
+		eigenvalueAverage = eigenvalueAverage / (RFIMStruct->h_valuesPerSample - numberOfDimensionsToRemove);
+
+
+
+
+		//2. Put all the signals into the eigenvector space. E(t)S
 		cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
 				RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
 				alpha, RFIMStruct->h_covarianceMatrix + (i * RFIMStruct->h_covarianceMatrixBatchOffset), RFIMStruct->h_valuesPerSample,
@@ -216,7 +277,11 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
 
 
-		//2. Scale the dimensions to reduce axis of the space
+
+
+
+
+		//3. Scale the dimensions to reduce axis of the space
 
 		//Reset the state of the scale matrix
 		//There is only one scale matrix
@@ -229,23 +294,14 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
  		}
 
 
-		//Calculate the scale factors
 
-		//Find the average of the eigenvalues that we are not going to scale
-		float eigenvalueAverage = 0;
-		for(uint64_t j = 0; j < RFIMStruct->h_valuesPerSample - RFIMStruct->h_eigenVectorDimensionsToReduce; ++j)
-		{
-			eigenvalueAverage += RFIMStruct->h_S[ (i * RFIMStruct->h_SBatchOffset) + j ];
-		}
-
-		eigenvalueAverage = eigenvalueAverage / (RFIMStruct->h_valuesPerSample - RFIMStruct->h_eigenVectorDimensionsToReduce);
 
 		//printf("eigenvalueAverage: %f\n", eigenvalueAverage);
 		//printf("highestEigenvalue: %f\n", RFIMStruct->h_S[(i * RFIMStruct->h_SBatchOffset) + RFIMStruct->h_valuesPerSample - 1]);
 
 
 		//Set the scale factors in the scale matrix
-		for(uint64_t j = (RFIMStruct->h_valuesPerSample - RFIMStruct->h_eigenVectorDimensionsToReduce);
+		for(uint64_t j = (RFIMStruct->h_valuesPerSample - numberOfDimensionsToRemove);
 				j < RFIMStruct->h_valuesPerSample; ++j)
 		{
 
@@ -260,7 +316,6 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 
 
 
-
 		//Do the scaling multiplication
 		cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
 				RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
@@ -270,7 +325,7 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 
 
 
-		//3. Put the signal back into the original space
+		//4. Put the signal back into the original space
 		cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
 				RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
 				alpha, RFIMStruct->h_covarianceMatrix + (i * RFIMStruct->h_covarianceMatrixBatchOffset), RFIMStruct->h_valuesPerSample,
@@ -279,16 +334,6 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 
 
 	}
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -25,7 +25,7 @@ public:
 	~WorkerWriterMailbox();
 
 	//Tell the writer thread that one thread is finished with this block
-	void Worker_NotifyFinishedWithBlock(RawDataBlock* rawDataBlock);
+	void Worker_NotifyFinishedWithBlock(RawDataBlock* rawDataBlock, uint64_t numberOfDimensionsRemoved);
 };
 
 

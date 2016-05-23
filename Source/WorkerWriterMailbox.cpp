@@ -8,6 +8,7 @@
 #include "../Header/WorkerWriterMailbox.h"
 
 #include <mutex>
+#include <stdint.h>
 
 
 WorkerWriterMailbox::WorkerWriterMailbox(WriterThreadData* writerThreadData, RFIMConfiguration* configuration)
@@ -22,10 +23,13 @@ WorkerWriterMailbox::~WorkerWriterMailbox()
 }
 
 	//Tell the writer thread that one thread is finished with this block
-void WorkerWriterMailbox::Worker_NotifyFinishedWithBlock(RawDataBlock* rawDataBlock)
+void WorkerWriterMailbox::Worker_NotifyFinishedWithBlock(RawDataBlock* rawDataBlock, uint64_t numberOfDimensionsRemoved)
 {
 	//Get the writer threads workQueue lock
 	std::lock_guard<std::mutex> writerQueueLock(writerThreadData->writeDataQueueMutex);
+
+	//Add the number of dimensions removed from this worker threads processing
+	rawDataBlock->numberOfDimensionsRemoved += numberOfDimensionsRemoved;
 
 	bool isAlreadyInQueue = false;
 
