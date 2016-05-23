@@ -24,4 +24,5 @@ void EigenvalueSolver(RFIMMemoryBlock* RFIMStruct);
 void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct);
 
 
+
 #endif /* HEADER_RFIMHELPERFUNCTIONS_H_ */

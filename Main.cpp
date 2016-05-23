@@ -11,7 +11,7 @@
 #include "Header/UnitTests.h"
 
 
-//TODO: Figure out what's going wrong at the end of the RFIM routine
+
 //TODO: Make the configuration be setup by passing arguments to the program via the command line
 //TODO: What if the values go above or below a the range that the bits can represent? (DO I FIND THE MIN AND MAX AND MAP IT?, OR JUST CLAMP?)
 //TODO: insert signals into the actual filterbank files
@@ -22,10 +22,10 @@ int main()
 {
 
 	//Unit tests
-	RunAllUnitTests();
+	//RunAllUnitTests();
 
 
-	/*
+
 	uint32_t beamNum = 13;
 	uint32_t rawDataBlockNum = 3;
 	uint32_t numberOfWorkerThreads = 14;
@@ -36,7 +36,7 @@ int main()
 	std::string inputFilenamePostfix = "/2016-01-05-12:07:06.fil";
 
 	std::string outputFilenamePrefix = "/lustre/projects/p002_swin/vvillani/";
-	std::string outputFilenamePostfix = "crashTest.fil";
+	std::string outputFilenamePostfix = "pna1-15625W.fil";
 
 	RFIMConfiguration configuration = RFIMConfiguration(numberOfWorkerThreads, windowSize, beamNum, dimensionsToReduce, rawDataBlockNum,
 			inputFilenamePrefix, inputFilenamePostfix,
@@ -47,7 +47,7 @@ int main()
 
 	std::cout << "Done!" << std::endl;
 
-	*/
+
 
 
 

@@ -204,95 +204,11 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 
 
 
-	//Set the appropriate number of columns to zero
-	uint64_t eigenvectorZeroByteSize = sizeof(float) * RFIMStruct->h_valuesPerSample * RFIMStruct->h_eigenVectorDimensionsToReduce;
-
-	//std::cout << "EigenZeroByteSize: " << eigenvectorZeroByteSize << std::endl;
-
-	//Eigenvectors are stored in the covariance matrix when using MKL
-	//Eigenvectors with the lowest eigenvalues are stored first
-	//smallest -> largest
-	//float* startingEigenVector = RFIMStruct->h_covarianceMatrix;
-	float* startingEigenVector = RFIMStruct->h_covarianceMatrix + ((RFIMStruct->h_valuesPerSample - RFIMStruct->h_eigenVectorDimensionsToReduce) * RFIMStruct->h_valuesPerSample);
-	uint32_t eigenVectorBatchOffset = RFIMStruct->h_valuesPerSample * RFIMStruct->h_valuesPerSample;
 
 	for(uint64_t i = 0; i < RFIMStruct->h_batchSize; ++i)
 	{
-		memset(startingEigenVector + (i * eigenVectorBatchOffset), 0, eigenvectorZeroByteSize);
 
-
-		//Swap all the columns
-		//1 0 0			  0 0 1
-		//0 1 0  becomes  0 1 0
-		//0 0 1			  1 0 0
-
-		//This is done so that when the eigenvector matrix is transposed the most significant eigenvector is in the first row,
-		//The second most significant is in the second row etc.
-		//If you don't do this you get incorrect results
-
-		/*
-		//eigenvector matrix = eigenvector matrix * columnSwapperMatrix
-		//The output signal temporarily holds the column swapped eigenvector matrices
-		cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
-				RFIMStruct->h_valuesPerSample, RFIMStruct->h_valuesPerSample, RFIMStruct->h_valuesPerSample,
-				alpha, RFIMStruct->h_covarianceMatrix + (i * eigenVectorBatchOffset), RFIMStruct->h_valuesPerSample,
-				RFIMStruct->h_eigenvectorColumnSwapperMatrix, RFIMStruct->h_valuesPerSample, beta,
-				RFIMStruct->h_outputSignal + (i * eigenVectorBatchOffset), RFIMStruct->h_valuesPerSample);
-		*/
-
-
-	}
-
-
-	//Copy all the swapped eigenvector matrices back into the RFIMStruct->h_covarianceMatrix memory
-	//memcpy(RFIMStruct->h_covarianceMatrix, RFIMStruct->h_outputSignal, sizeof(float) * eigenVectorBatchOffset * RFIMStruct->h_batchSize);
-
-
-
-
-
-
-
-	uint64_t originalSignalBatchOffset = RFIMStruct->h_valuesPerSample * RFIMStruct->h_numberOfSamples;
-
-
-	//Do the projection
-	for(uint64_t i = 0; i < RFIMStruct->h_batchSize; ++i)
-	{
-
-		/*
-		//AFTER
-		//Ps = A(transposed) * E
-		cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
-				RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples,
-				alpha, RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset), RFIMStruct->h_valuesPerSample,
-				RFIMStruct->h_covarianceMatrix + (i * RFIMStruct->h_covarianceMatrixBatchOffset), RFIMStruct->h_valuesPerSample, beta,
-				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
-
-		*/
-
-		/*
-		//TODO: Debug, REMOVE
-		for(uint64_t j = 0; j < RFIMStruct->h_valuesPerSample * RFIMStruct->h_numberOfSamples; ++j)
-		{
-			printf("Before signal[%llu]: %f\n", i, RFIMStruct->h_inputSignal[(i * RFIMStruct->h_inputSignalBatchOffset) + j]);
-		}
-
-		printf("\n");
-		*/
-
-		/*
-		//TODO: Debug, before up eigenvectors
-		for(uint64_t j = 0; j < RFIMStruct->h_valuesPerSample * RFIMStruct->h_valuesPerSample; ++j)
-		{
-			printf("Before eigenvectors[%llu]: %f\n", i, RFIMStruct->h_covarianceMatrix[(i * eigenVectorBatchOffset) + j]);
-		}
-		*/
-
-		//BEFORE
-		//Projected signal matrix
-		//Ps = (Er Transposed) * Os
-
+		//1. Put all the signals into the eigenvector space. E(t)S
 		cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
 				RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
 				alpha, RFIMStruct->h_covarianceMatrix + (i * RFIMStruct->h_covarianceMatrixBatchOffset), RFIMStruct->h_valuesPerSample,
@@ -300,33 +216,75 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
 
 
-		/*
-		//TODO: Debug, REMOVE
-		for(uint64_t j = 0; j < RFIMStruct->h_valuesPerSample * RFIMStruct->h_numberOfSamples; ++j)
+		//2. Scale the dimensions to reduce axis of the space
+
+		//Reset the state of the scale matrix
+		//There is only one scale matrix
+		memset(RFIMStruct->h_scaleMatrix, 0, sizeof(float) * RFIMStruct->h_scaleMatrixLength);
+
+		//Set it to the identity matrix
+		for(uint64_t j = 0; j < RFIMStruct->h_scaleMatrixLength; j += (RFIMStruct->h_valuesPerSample + 1))
 		{
-			printf("Intermediate signal[%llu]: %f\n", i, RFIMStruct->h_outputSignal[(i * RFIMStruct->h_outputSignalBatchOffset) + j]);
+			RFIMStruct->h_scaleMatrix[j] = 1;
+ 		}
+
+
+		//Calculate the scale factors
+
+		//Find the average of the eigenvalues that we are not going to scale
+		float eigenvalueAverage = 0;
+		for(uint64_t j = RFIMStruct->h_eigenVectorDimensionsToReduce; j < RFIMStruct->h_valuesPerSample; ++j)
+		{
+			eigenvalueAverage += RFIMStruct->h_S[ (i * RFIMStruct->h_SBatchOffset) + j ];
 		}
 
-		printf("\n");
-		*/
+		eigenvalueAverage = eigenvalueAverage / (RFIMStruct->h_valuesPerSample - RFIMStruct->h_eigenVectorDimensionsToReduce);
+
+		//Set the scale factors in the scale matrix
+		for(uint64_t j = (RFIMStruct->h_valuesPerSample - RFIMStruct->h_eigenVectorDimensionsToReduce);
+				j < RFIMStruct->h_valuesPerSample; ++j)
+		{
+			//average / eigenvalue = scale factor
+			RFIMStruct->h_scaleMatrix[ (j * RFIMStruct->h_valuesPerSample) + j ] =
+					eigenvalueAverage / RFIMStruct->h_S[(i * RFIMStruct->h_SBatchOffset) + j];
+		}
 
 
-		//BEFORE
-		//Do the reprojection back
-		//final signal matrix
-		// Fs = Er * Ps
-
+		//Do the scaling multiplication
 		cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
 				RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
-				alpha,  RFIMStruct->h_covarianceMatrix + (i * RFIMStruct->h_covarianceMatrixBatchOffset), RFIMStruct->h_valuesPerSample,
+				alpha, RFIMStruct->h_scaleMatrix, RFIMStruct->h_valuesPerSample,
 				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample, beta,
 				RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
 
 
+
+		//3. Put the signal back into the original space
+		cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
+				RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
+				alpha, RFIMStruct->h_covarianceMatrix + (i * RFIMStruct->h_covarianceMatrixBatchOffset), RFIMStruct->h_valuesPerSample,
+				RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset), RFIMStruct->h_valuesPerSample, beta,
+				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
+
+
 	}
+
+
+
+
+
+
+
+
+
+
+
+
 
 #endif
 
-
 }
+
+
+
 

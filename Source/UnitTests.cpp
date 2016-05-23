@@ -27,8 +27,8 @@ void RunAllUnitTests()
 	//MultiplexDemultiplexUnitTest();
 
 	//MeanUnitTest();
-	//CovarianceMatrixUnitTest();
-	EigenvectorSolverUnitTest();
+	CovarianceMatrixUnitTest();
+	//EigenvectorSolverUnitTest();
 	//ProjectionDeprojectionUnitTest();
 	//Remove1DProjectionDeprojectionUnitTest();
 
