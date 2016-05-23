@@ -233,21 +233,32 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 
 		//Find the average of the eigenvalues that we are not going to scale
 		float eigenvalueAverage = 0;
-		for(uint64_t j = RFIMStruct->h_eigenVectorDimensionsToReduce; j < RFIMStruct->h_valuesPerSample; ++j)
+		for(uint64_t j = 0; j < RFIMStruct->h_valuesPerSample - RFIMStruct->h_eigenVectorDimensionsToReduce; ++j)
 		{
 			eigenvalueAverage += RFIMStruct->h_S[ (i * RFIMStruct->h_SBatchOffset) + j ];
 		}
 
 		eigenvalueAverage = eigenvalueAverage / (RFIMStruct->h_valuesPerSample - RFIMStruct->h_eigenVectorDimensionsToReduce);
 
+		//printf("eigenvalueAverage: %f\n", eigenvalueAverage);
+		//printf("highestEigenvalue: %f\n", RFIMStruct->h_S[(i * RFIMStruct->h_SBatchOffset) + RFIMStruct->h_valuesPerSample - 1]);
+
+
 		//Set the scale factors in the scale matrix
 		for(uint64_t j = (RFIMStruct->h_valuesPerSample - RFIMStruct->h_eigenVectorDimensionsToReduce);
 				j < RFIMStruct->h_valuesPerSample; ++j)
 		{
+
 			//average / eigenvalue = scale factor
-			RFIMStruct->h_scaleMatrix[ (j * RFIMStruct->h_valuesPerSample) + j ] =
-					eigenvalueAverage / RFIMStruct->h_S[(i * RFIMStruct->h_SBatchOffset) + j];
+			RFIMStruct->h_scaleMatrix[ (j * RFIMStruct->h_valuesPerSample) + j ] = //1.0f -
+					(eigenvalueAverage / RFIMStruct->h_S[(i * RFIMStruct->h_SBatchOffset) + j]);
+
+
 		}
+
+
+
+
 
 
 		//Do the scaling multiplication

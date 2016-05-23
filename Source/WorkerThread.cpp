@@ -207,15 +207,15 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 			//Make sure the samples are bounded by the max window size
 			rfimMemoryBlock->h_numberOfSamples = std::min((uint64_t)configuration->windowSize, sampleDifference);
 
-			printf("threadID: %llu\n", workerThreadID);
-			printf("numberOfSamples: %llu\n", rfimMemoryBlock->h_numberOfSamples);
-			printf("usedDataLength: %llu\n\n", rawData->usedDataLength);
+			//printf("threadID: %llu\n", workerThreadID);
+			//printf("numberOfSamples: %llu\n", rfimMemoryBlock->h_numberOfSamples);
+			//printf("usedDataLength: %llu\n\n", rawData->usedDataLength);
 		}
 		else //There is no work to do! Let the writer thread know your done
 		{
-			printf("threadID: %llu\n", workerThreadID);
-			printf("numberOfSamples: %llu\n", 0);
-			printf("usedDataLength: %llu\n\n", rawData->usedDataLength);
+			//printf("threadID: %llu\n", workerThreadID);
+			//printf("numberOfSamples: %llu\n", 0);
+			//printf("usedDataLength: %llu\n\n", rawData->usedDataLength);
 
 			//Is this the last block we should process?
 			shouldShutdown = rawData->isLastBlock;
@@ -236,24 +236,10 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 		WorkerThreadMultiplexData(rfimMemoryBlock, configuration);
 
 
-		//Calculate the window size (AKA number of samples in RFIMStar jargon) of this iteration,
-		//most of the time it will always be the same, unless we are at the end of the
-		//filterbank files
-		//This is so when we do RFIM we ignore samples that don't exist as we reach near the end of a file
-		//rfimMemoryBlock->h_numberOfSamples = (8 * (rawData->usedDataLength / configuration->beamNum)) /
-		//		(configuration->channelNum * configuration->numberOfWorkerThreads * configuration->numBitsPerSample);
-
-
 
 		//Run RFIM
 		RFIM(rfimMemoryBlock);
 
-
-
-		//COPY ALL DATA OVER REGARDLESS IF IT IS USED OR NOT?
-		//uint64_t totalSignalByteSize = sizeof(float) * rfimMemoryBlock->h_valuesPerSample * configuration->windowSize *
-		//			rfimMemoryBlock->h_batchSize;
-		//memcpy(rfimMemoryBlock->h_outputSignal, rfimMemoryBlock->h_inputSignal, totalSignalByteSize);
 
 
 		//De-Multiplex the data
