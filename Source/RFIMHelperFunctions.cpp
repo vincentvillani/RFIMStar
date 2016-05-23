@@ -217,13 +217,13 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 		//TODO: Can you just add the diagonal of the covariance matrix?
 		//Calculate the variance of the signal
 		float signalSquared = cblas_sdot(RFIMStruct->h_valuesPerSample * RFIMStruct->h_numberOfSamples,
-				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), 1,
-				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), 1);
+				RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset), 1,
+				RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset), 1);
 
 		signalSquared /= RFIMStruct->h_valuesPerSample * RFIMStruct->h_numberOfSamples;
 
 		float meanSquared = cblas_sasum(RFIMStruct->h_valuesPerSample * RFIMStruct->h_numberOfSamples,
-				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), 1);
+				RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset), 1);
 
 		meanSquared /= RFIMStruct->h_valuesPerSample * RFIMStruct->h_numberOfSamples;
 		meanSquared = powf(meanSquared, 2.0f);
@@ -254,10 +254,21 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 
 		}
 
-		//There is not enough RFI here, go to the next frequency channel
-		if(numberOfDimensionsToRemove == 0)
-			continue;
 
+		//TODO: If this exits, make sure to copy the data over for now. Eventually just track it!
+		//There is not enough RFI here, go to the next frequency channel
+
+		if(numberOfDimensionsToRemove == 0)
+		{
+			memcpy(RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset),
+					RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset),
+					sizeof(float) * RFIMStruct->h_valuesPerSample * RFIMStruct->h_numberOfSamples);
+			continue;
+		}
+
+
+		//TODO: Remove this eventually
+		//numberOfDimensionsToRemove = 1;
 
 
 		//Update the number of dimensions removed
