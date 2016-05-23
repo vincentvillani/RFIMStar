@@ -11,9 +11,8 @@
 #include "Header/UnitTests.h"
 
 
-
+//TODO: The variable removal of dimensions currently sucks. Find a way to make it better.
 //TODO: Is it valid to add the variances here? The variances of each beam should be independent, right?
-//TODO: Calculate how many dimensions to reduce at run-time, rather than a hardcoded 1
 //TODO: Make the configuration be setup by passing arguments to the program via the command line
 //TODO: What if the values go above or below a the range that the bits can represent? (DO I FIND THE MIN AND MAX AND MAP IT?, OR JUST CLAMP?)
 //TODO: Unit test for memory leaks
