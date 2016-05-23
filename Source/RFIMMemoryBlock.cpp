@@ -130,8 +130,8 @@
 
 
 
-		this->h_scaleFactorsLength = h_valuesPerSample * h_valuesPerSample;
-		this->h_scaleMatrix = new float[h_scaleFactorsLength];
+		this->h_scaleMatrixLength = h_valuesPerSample * h_valuesPerSample;
+		this->h_scaleMatrix = new float[h_scaleMatrixLength];
 
 		this->h_scaleFactorsLength = h_dimensionToReduce;
 		this->h_scaleFactors = new float[h_scaleFactorsLength];
