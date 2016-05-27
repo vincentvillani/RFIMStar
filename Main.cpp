@@ -12,7 +12,7 @@
 
 
 
-//TODO: Is it valid to add the variances here? The variances of each beam should be independent, right?
+//TODO: Generate a mask file for each block
 //TODO: Calculate how many dimensions to reduce at run-time, rather than a hardcoded 1
 //TODO: Make the configuration be setup by passing arguments to the program via the command line
 //TODO: What if the values go above or below a the range that the bits can represent? (DO I FIND THE MIN AND MAX AND MAP IT?, OR JUST CLAMP?)
@@ -32,14 +32,14 @@ int main()
 	uint32_t beamNum = 13;
 	uint32_t rawDataBlockNum = 5;
 	uint32_t numberOfWorkerThreads = 15;
-	uint32_t windowSize = 15625;
-	uint32_t dimensionsToReduce = 2;
+	uint32_t windowSize = 169;
+	uint32_t dimensionsToReduce = 1;
 
 	std::string inputFilenamePrefix = "/lustre/projects/p002_swin/surveys/SUPERB/2014-12-06-04:36:26/";
 	std::string inputFilenamePostfix = "/2014-12-06-04:36:26.fil";
 
 	std::string outputFilenamePrefix = "/lustre/projects/p002_swin/vvillani/badObservation/";
-	std::string outputFilenamePostfix = "pna2-15625W.fil";
+	std::string outputFilenamePostfix = "zpna1-169W.fil";
 
 	RFIMConfiguration configuration = RFIMConfiguration(numberOfWorkerThreads, windowSize, beamNum, dimensionsToReduce, rawDataBlockNum,
 			inputFilenamePrefix, inputFilenamePostfix,

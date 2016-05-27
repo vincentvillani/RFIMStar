@@ -21,7 +21,7 @@ float CalculateStandardDeviation(float* dataArray, uint64_t dataLength, float me
 
 float CalculateMedian(float* dataArray, uint64_t dataLength);
 float CalculateMeanAbsoluteDeviation(float* dataArray, float* workingSpace, uint64_t dataLength);
-float CalculateModifiedZScore(float sample, float median);
+float CalculateModifiedZScore(float sample, float median, float meanAbsoluteDeviation);
 
 //------------------------------------------------------
 

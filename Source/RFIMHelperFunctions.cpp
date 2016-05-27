@@ -76,7 +76,10 @@ float CalculateStandardDeviation(float* dataArray, uint64_t dataLength, float me
 
 int compareFunction(const void* a, const void* b)
 {
-	return a - b;
+	float floata = *((float*)a);
+	float floatb = *((float*)b);
+
+	return floata - floatb;
 }
 
 float CalculateMedian(float* dataArray, uint64_t dataLength)
@@ -307,7 +310,7 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 	float alpha = 1;
 	float beta = 0;
 
-
+	uint64_t totalDimensionsRemoved = 0;
 
 
 	for(uint64_t i = 0; i < RFIMStruct->h_batchSize; ++i)
@@ -336,24 +339,56 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 
 		//Detect outliers in the data set
 
+		float* currentEigenvalues = RFIMStruct->h_S + (i * RFIMStruct->h_SBatchOffset);
 
-		//Calculate the scale factors
+		//The eigenvalues are already sorted, just get one in the middle or close to the middle (if even)
+		float eigenvalueMedian =  *(currentEigenvalues + (uint64_t)(RFIMStruct->h_valuesPerSample / 2.0f));
 
-		//Find the average of the eigenvalues that we are not going to scale
+		//Calculate the median absolute deviation
+		//Use the h_meanvec as working space, we don't need it at this point
+		float medianAbsoluteDeviation = CalculateMeanAbsoluteDeviation(currentEigenvalues,
+				RFIMStruct->h_meanVec, RFIMStruct->h_valuesPerSample);
+
+
+		uint32_t eigenvaluesToRemove = 0;
 		float eigenvalueAverage = 0;
-		for(uint64_t j = 0; j < RFIMStruct->h_valuesPerSample - RFIMStruct->h_eigenVectorDimensionsToReduce; ++j)
+
+		//Detect outliers in the dataset using modified z-values
+		//A value over 3.5f can be considered an outlier
+		//If it's not over 3.5, add it to the average
+		for(uint64_t j = 0; j < RFIMStruct->h_valuesPerSample; ++j)
 		{
-			eigenvalueAverage += RFIMStruct->h_S[ (i * RFIMStruct->h_SBatchOffset) + j ];
+			float modifiedZValue = CalculateModifiedZScore(currentEigenvalues[j], eigenvalueMedian, medianAbsoluteDeviation);
+
+			//Consider it an outlier
+			if(modifiedZValue > 50.0f && j > RFIMStruct->h_valuesPerSample / 2.0f)
+			{
+				eigenvaluesToRemove += 1;
+			}
+			else
+			{
+				eigenvalueAverage += currentEigenvalues[j];
+			}
 		}
 
-		eigenvalueAverage = eigenvalueAverage / (RFIMStruct->h_valuesPerSample - RFIMStruct->h_eigenVectorDimensionsToReduce);
 
-		//printf("eigenvalueAverage: %f\n", eigenvalueAverage);
-		//printf("highestEigenvalue: %f\n", RFIMStruct->h_S[(i * RFIMStruct->h_SBatchOffset) + RFIMStruct->h_valuesPerSample - 1]);
+		//There is no RFI here, skip the next step
+		if(eigenvaluesToRemove == 0)
+		{
+			//TODO: Line it up somehow so I don't have to do this?
+			//Just copy the signal across so the next step has valid data
+			memcpy(RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset),
+					RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset),
+					sizeof(float) * RFIMStruct->h_valuesPerSample * RFIMStruct->h_numberOfSamples);
 
+			continue;
+		}
+
+		//Keep track of how many dimensions are removed
+		totalDimensionsRemoved += eigenvaluesToRemove;
 
 		//Set the scale factors in the scale matrix
-		for(uint64_t j = (RFIMStruct->h_valuesPerSample - RFIMStruct->h_eigenVectorDimensionsToReduce);
+		for(uint64_t j = (RFIMStruct->h_valuesPerSample - eigenvaluesToRemove);
 				j < RFIMStruct->h_valuesPerSample; ++j)
 		{
 
@@ -391,11 +426,7 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 
 
 
-
-
-
-
-
+	printf("Dimensions removed: %llu\n", totalDimensionsRemoved);
 
 
 
