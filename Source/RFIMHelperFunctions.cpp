@@ -73,6 +73,54 @@ float CalculateStandardDeviation(float* dataArray, uint64_t dataLength, float me
 
 
 
+
+int compareFunction(const void* a, const void* b)
+{
+	return a - b;
+}
+
+float CalculateMedian(float* dataArray, uint64_t dataLength)
+{
+	//Sort the data
+	qsort(dataArray, dataLength, sizeof(float), &compareFunction);
+
+	//return the median of the sorted data
+	return dataArray[ (uint64_t)(dataLength / 2.0f) ];
+}
+
+
+float CalculateMeanAbsoluteDeviation(float* dataArray, float* workingSpace, uint64_t dataLength)
+{
+	//Copy the data into the working space
+	memcpy(workingSpace, dataArray, dataLength * sizeof(float));
+
+	float median1 = CalculateMedian(workingSpace, dataLength);
+
+	//Now get the absolute deviations from that median
+	for(uint64_t i = 0; i < dataLength; ++i)
+	{
+		workingSpace[i] = fabs(workingSpace[i] - median1);
+	}
+
+	//Find the median of the absolute deviations
+	return CalculateMedian(workingSpace, dataLength);
+
+}
+
+
+
+//Used to detect outliers in a dataset
+//If the absolute value of a modified z-score is higher than 3.5 it can be considered a potential outlier
+//http://www.itl.nist.gov/div898/handbook/eda/section3/eda35h.htm
+float CalculateModifiedZScore(float sample, float median, float meanAbsoluteDeviation)
+{
+	return  fabs( (0.6745f * (sample - median)) / meanAbsoluteDeviation );
+}
+
+
+
+
+
 void CalculateMeanMatrices(RFIMMemoryBlock* rfimMemBlock)
 {
 
@@ -284,6 +332,9 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 		{
 			RFIMStruct->h_scaleMatrix[j] = 1;
  		}
+
+
+		//Detect outliers in the data set
 
 
 		//Calculate the scale factors
