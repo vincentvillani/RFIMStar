@@ -342,26 +342,30 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 		float* currentEigenvalues = RFIMStruct->h_S + (i * RFIMStruct->h_SBatchOffset);
 
 		//The eigenvalues are already sorted, just get one in the middle or close to the middle (if even)
-		float eigenvalueMedian =  *(currentEigenvalues + (uint64_t)(RFIMStruct->h_valuesPerSample / 2.0f));
+		//float eigenvalueMedian =  *(currentEigenvalues + (uint64_t)(RFIMStruct->h_valuesPerSample / 2.0f));
 
 		//Calculate the median absolute deviation
 		//Use the h_meanvec as working space, we don't need it at this point
-		float medianAbsoluteDeviation = CalculateMeanAbsoluteDeviation(currentEigenvalues,
-				RFIMStruct->h_meanVec, RFIMStruct->h_valuesPerSample);
+		//float medianAbsoluteDeviation = CalculateMeanAbsoluteDeviation(currentEigenvalues,
+		//		RFIMStruct->h_meanVec, RFIMStruct->h_valuesPerSample);
 
 
 		uint32_t eigenvaluesToRemove = 0;
 		float eigenvalueAverage = 0;
 
+		float threshold = 1.0f;
+
 		//Detect outliers in the dataset using modified z-values
 		//A value over 3.5f can be considered an outlier
 		//If it's not over 3.5, add it to the average
-		for(uint64_t j = 0; j < RFIMStruct->h_valuesPerSample; ++j)
+		for(uint64_t j = 0; j < RFIMStruct->h_valuesPerSample - 1; ++j)
 		{
-			float modifiedZValue = CalculateModifiedZScore(currentEigenvalues[j], eigenvalueMedian, medianAbsoluteDeviation);
+			//float modifiedZValue = CalculateModifiedZScore(currentEigenvalues[j], eigenvalueMedian, medianAbsoluteDeviation);
 
-			//Consider it an outlier
-			if(modifiedZValue > 50.0f && j > RFIMStruct->h_valuesPerSample / 2.0f)
+			//if the difference in magnitude of the eigenvalues is bigger than the threshold, remove it?
+			float eigenValueDifference = currentEigenvalues[j + 1] - currentEigenvalues[j];
+			eigenvalueAverage += currentEigenvalues[j];
+			if( eigenValueDifference > threshold && eigenValueDifference - (eigenvalueAverage / j) > threshold )
 			{
 				eigenvaluesToRemove += 1;
 			}
@@ -425,8 +429,8 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 
 
 
-
-	printf("Dimensions removed: %llu\n", totalDimensionsRemoved);
+	if(totalDimensionsRemoved > 0)
+		printf("Dimensions removed: %llu\n", totalDimensionsRemoved);
 
 
 
