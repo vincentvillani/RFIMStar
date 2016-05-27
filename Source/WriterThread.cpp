@@ -49,7 +49,7 @@ void WriterThreadMain(WriterThreadData* writerThreadData, RFIMConfiguration* con
 		//We didn't find anything to do, wait for something to do.
 		if(currentRawDataBlock == NULL)
 		{
-			std::cout << "WriterThread: Waiting for work to do..." << std::endl;
+			//std::cout << "WriterThread: Waiting for work to do..." << std::endl;
 
 			//Wait for work to do
 			writerThreadData->writeDataQueueConditionVariable.wait(workQueueLock, [&]

@@ -30,16 +30,16 @@ int main()
 
 
 	uint32_t beamNum = 13;
-	uint32_t rawDataBlockNum = 3;
+	uint32_t rawDataBlockNum = 5;
 	uint32_t numberOfWorkerThreads = 15;
 	uint32_t windowSize = 15625;
-	uint32_t dimensionsToReduce = 1;
+	uint32_t dimensionsToReduce = 2;
 
-	std::string inputFilenamePrefix = "/lustre/projects/p002_swin/surveys/SUPERB/2016-01-05-12:07:06/";
-	std::string inputFilenamePostfix = "/2016-01-05-12:07:06.fil";
+	std::string inputFilenamePrefix = "/lustre/projects/p002_swin/surveys/SUPERB/2014-12-06-04:36:26/";
+	std::string inputFilenamePostfix = "/2014-12-06-04:36:26.fil";
 
-	std::string outputFilenamePrefix = "/lustre/projects/p002_swin/vvillani/";
-	std::string outputFilenamePostfix = "pna1-15625W.fil";
+	std::string outputFilenamePrefix = "/lustre/projects/p002_swin/vvillani/badObservation/";
+	std::string outputFilenamePostfix = "pna2-15625W.fil";
 
 	RFIMConfiguration configuration = RFIMConfiguration(numberOfWorkerThreads, windowSize, beamNum, dimensionsToReduce, rawDataBlockNum,
 			inputFilenamePrefix, inputFilenamePostfix,
