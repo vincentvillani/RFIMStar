@@ -25,6 +25,9 @@ void WorkerThreadUnpackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock,
 
 void WorkerThreadMultiplexData(RFIMMemoryBlock* rfimMemoryBlock, RFIMConfiguration* configuration);
 
+
+void WorkerThreadNormaliseDistribution(RFIMMemoryBlock* rfimMemoryBlock);
+
 void WorkerThreadDeMultiplexData(RFIMMemoryBlock* rfimMemoryBlock, RFIMConfiguration* configuration);
 
 void WorkerThreadPackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock, RFIMMemoryBlock* rfimMemoryBlock,

@@ -236,6 +236,10 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 		WorkerThreadMultiplexData(rfimMemoryBlock, configuration);
 
 
+		//Normalise the data's underlying distribution
+		//WorkerThreadNormaliseDistribution(rfimMemoryBlock);
+
+
 
 		//Run RFIM
 		RFIM(rfimMemoryBlock);
@@ -362,6 +366,33 @@ void WorkerThreadMultiplexData(RFIMMemoryBlock* rfimMemoryBlock, RFIMConfigurati
 
 
 }
+
+
+
+
+void WorkerThreadNormaliseDistribution(RFIMMemoryBlock* rfimMemoryBlock)
+{
+	uint64_t multiplexedSignalLength = rfimMemoryBlock->h_valuesPerSample * rfimMemoryBlock->h_numberOfSamples;
+
+	//For each freq channel
+	for(uint64_t i = 0; i < rfimMemoryBlock->h_batchSize; ++i)
+	{
+		//Calculate the mean and std dev
+		float* currentDataSet = rfimMemoryBlock->h_inputSignal + (i * rfimMemoryBlock->h_inputSignalBatchOffset);
+		float mean = CalculateMean(currentDataSet, multiplexedSignalLength);
+		float stdDev = CalculateStandardDeviation(currentDataSet, multiplexedSignalLength, mean);
+
+		//For each sample in a channel
+		//Compute normalise its stats
+		for(uint64_t j = 0; j < multiplexedSignalLength; ++j)
+		{
+			currentDataSet[j] = (currentDataSet[j] - mean) / stdDev;
+		}
+	}
+
+}
+
+
 
 
 void WorkerThreadDeMultiplexData(RFIMMemoryBlock* rfimMemoryBlock, RFIMConfiguration* configuration)

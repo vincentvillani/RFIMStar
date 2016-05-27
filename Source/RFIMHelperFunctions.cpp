@@ -10,11 +10,68 @@
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
+#include <math.h>
 
 #ifdef BUILD_WITH_MKL
 #include <mkl.h>
 #include <mkl_lapacke.h>
 #endif
+
+
+float CalculateMean(float* dataArray, uint64_t dataLength)
+{
+#ifdef BUILD_WITH_MKL
+
+	float result = cblas_sasum(dataLength, dataArray, 1);
+
+	return result / dataLength;
+#else
+	float result = 0;
+
+	for(uint64_t i = 0; i < dataLength; ++i)
+	{
+		result += dataArray[i];
+	}
+
+	return result / dataLength;
+#endif
+
+}
+
+
+float CalculateStandardDeviation(float* dataArray, uint64_t dataLength)
+{
+
+	float mean = CalculateMean(dataArray, dataLength);
+
+	float result = 0;
+
+	for(uint64_t i = 0; i < dataLength; ++i)
+	{
+		//Square the difference and sum it
+		result += powf((dataArray[i] - mean), 2.0f);
+	}
+
+	return sqrtf(result / dataLength);
+}
+
+
+
+
+float CalculateStandardDeviation(float* dataArray, uint64_t dataLength, float mean)
+{
+	float result = 0;
+
+	for(uint64_t i = 0; i < dataLength; ++i)
+	{
+		//Square the difference and sum it
+		result += powf((dataArray[i] - mean), 2.0f);
+	}
+
+	return sqrtf(result / dataLength);
+}
+
+
 
 void CalculateMeanMatrices(RFIMMemoryBlock* rfimMemBlock)
 {
