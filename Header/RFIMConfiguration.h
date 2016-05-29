@@ -24,6 +24,7 @@ public:
 	uint32_t dimensionsToReduce; //Number of dimensions to reduce
 	uint32_t rawDataBlockNum; //Number of raw data blocks that can be used as I/O buffers
 	uint32_t numBitsPerSample; //Number of bits per sample, set by the filterbank files
+	bool generatingMask; //Do we want to generate a mask?
 
 
 	std::string inputFilenamePrefix;
@@ -35,7 +36,7 @@ public:
 	RFIMConfiguration(uint32_t workerThreadNum, uint32_t windowSize, uint32_t beamNum, uint32_t dimensionsToReduce,
 			uint32_t rawDataBlockNum,
 			std::string inputFilenamePrefix, std::string inputFilenamePostfix,
-			std::string outputFilenamePrefix, std::string outputFilenamePostfix);
+			std::string outputFilenamePrefix, std::string outputFilenamePostfix, bool generatingMask);
 
 	~RFIMConfiguration();
 

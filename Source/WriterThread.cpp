@@ -101,6 +101,15 @@ void WriterThreadMain(WriterThreadData* writerThreadData, RFIMConfiguration* con
 		}
 
 
+		//If we are generating a filterbank mask, write that data also.
+		if(configuration->generatingMask)
+		{
+			WriteSigprocOutputFile(writerThreadData->maskFilterbank, currentRawDataBlock->packedMaskData,
+					currentRawDataBlock->maskDataLength);
+		}
+
+
+
 		//Do house keeping
 		shouldShutdown = currentRawDataBlock->isLastBlock;
 		currentBlockID += 1;

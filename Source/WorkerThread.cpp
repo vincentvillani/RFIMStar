@@ -160,7 +160,8 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 	//h_valuesPerSample = number of beams (or filterbank files)
 	//h_numberOfSamples = window size
 	//batchSize = number of channels
-	RFIMMemoryBlock* rfimMemoryBlock = new RFIMMemoryBlock(configuration->beamNum, configuration->windowSize, configuration->dimensionsToReduce, configuration->channelNum);
+	RFIMMemoryBlock* rfimMemoryBlock = new RFIMMemoryBlock(configuration->beamNum, configuration->windowSize, configuration->dimensionsToReduce, configuration->channelNum,
+			configuration->generatingMask);
 
 
 	//Is there any work to do?
@@ -343,7 +344,7 @@ void WorkerThreadMultiplexData(RFIMMemoryBlock* rfimMemoryBlock, RFIMConfigurati
 				//printf("outputSignalIndex: %llu\n\n", (b * outputBeamOffset) + currentInputTimeSampleOffset + f);
 
 				rfimMemoryBlock->h_inputSignal[currentInputFreqChannelOffset + currentInputTimeSampleOffset + b] =
-					rfimMemoryBlock->h_outputSignal[(b * (configuration->channelNum * configuration->windowSize)) +
+					rfimMemoryBlock->h_outputSignal[(b * (outputBeamOffset)) +
 													t * configuration->channelNum + f];
 
 			}
@@ -423,7 +424,7 @@ void WorkerThreadDeMultiplexData(RFIMMemoryBlock* rfimMemoryBlock, RFIMConfigura
 				//printf("inputSignalIndex: %llu\n", currentInputFreqChannelOffset + currentInputTimeSampleOffset + b);
 				//printf("outputSignalIndex: %llu\n\n", (b * outputBeamOffset) + currentInputTimeSampleOffset + f);
 
-				rfimMemoryBlock->h_inputSignal[(b * (configuration->channelNum * configuration->windowSize)) + t * configuration->channelNum + f] =
+				rfimMemoryBlock->h_inputSignal[(b * (outputBeamOffset)) + t * configuration->channelNum + f] =
 						rfimMemoryBlock->h_outputSignal[currentInputFreqChannelOffset + currentInputTimeSampleOffset + b];
 
 
@@ -487,7 +488,7 @@ void WorkerThreadPackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock, R
 
 	//rawDataBlock->usedDataLength instead of rawDataBlock->totalDataLength
 	uint64_t oneFilterbankByteSize = (rawDataBlock->totalDataLength / configuration->beamNum);
-	uint64_t threadFilterbankByteSize = (oneFilterbankByteSize / configuration->numberOfWorkerThreads);
+	//uint64_t threadFilterbankByteSize = (oneFilterbankByteSize / configuration->numberOfWorkerThreads);
 	uint64_t threadStartingOffset = (oneFilterbankByteSize / configuration->numberOfWorkerThreads) * workerThreadID;
 
 	/*
@@ -511,6 +512,17 @@ void WorkerThreadPackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock, R
 				rawDataBlock->packedRawData + (i * oneFilterbankByteSize) + threadStartingOffset,
 				configuration->numBitsPerSample, outputCharDataOffset);
 
+	}
+
+
+	//If we are generating a mask, pack the values into the appropriate place in the raw data block
+	if(rfimMemoryBlock->h_generatingMask)
+	{
+
+		//Pack the h_maskValues into 1 bit data
+		pack(rfimMemoryBlock->h_maskValues,
+				rawDataBlock->packedMaskData + (rfimMemoryBlock->h_maskValuesLength / 8) * workerThreadID,
+				1, rfimMemoryBlock->h_maskValuesLength);
 	}
 
 }

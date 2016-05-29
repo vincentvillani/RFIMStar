@@ -13,7 +13,8 @@
 #include <iostream>
 #include <string.h>
 
-	RFIMMemoryBlock::RFIMMemoryBlock(uint64_t h_valuesPerSample, uint64_t h_numberOfSamples, uint64_t h_dimensionToReduce, uint64_t h_batchSize)
+	RFIMMemoryBlock::RFIMMemoryBlock(uint64_t h_valuesPerSample, uint64_t h_numberOfSamples, uint64_t h_dimensionToReduce, uint64_t h_batchSize,
+			bool generatingMask)
 	{
 
 
@@ -153,6 +154,28 @@
 			exit(1);
 		}
 
+
+
+		this->h_generatingMask = generatingMask;
+
+		if(this->h_generatingMask)
+		{
+			this->h_maskValuesLength = h_batchSize; //We need a byte for each frequency channel
+			this->h_maskValues = new (std::nothrow) unsigned char[this->h_maskValuesLength];
+
+			if(this->h_maskValues == NULL)
+			{
+				fprintf(stderr, "RFIMMemoryBlock::RFIMMemoryBlock(): Error allocating memory %u bytes for h_outputSignal\n",
+						this->h_maskValuesLength);
+				exit(1);
+			}
+		}
+		else
+		{
+			this->h_maskValuesLength = 0;
+			this->h_maskValues = NULL;
+		}
+
 	}
 
 
@@ -175,6 +198,9 @@
 		//delete [] this->h_eigenvectorColumnSwapperMatrix;
 
 		delete [] this->h_outputSignal;
+
+		if(this->h_generatingMask)
+			delete [] this->h_maskValues;
 
 	}
 

@@ -353,19 +353,19 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 		uint32_t eigenvaluesToRemove = 0;
 		float eigenvalueAverage = 0;
 
-		float threshold = 1.0f;
+		float powerThreshold = 2.0f;
 
 		//Detect outliers in the dataset using modified z-values
 		//A value over 3.5f can be considered an outlier
 		//If it's not over 3.5, add it to the average
-		for(uint64_t j = 0; j < RFIMStruct->h_valuesPerSample - 1; ++j)
+		for(uint64_t j = 0; j < RFIMStruct->h_valuesPerSample; ++j)
 		{
 			//float modifiedZValue = CalculateModifiedZScore(currentEigenvalues[j], eigenvalueMedian, medianAbsoluteDeviation);
 
 			//if the difference in magnitude of the eigenvalues is bigger than the threshold, remove it?
-			float eigenValueDifference = currentEigenvalues[j + 1] - currentEigenvalues[j];
-			eigenvalueAverage += currentEigenvalues[j];
-			if( eigenValueDifference > threshold && eigenValueDifference - (eigenvalueAverage / j) > threshold )
+			//float eigenValueDifference = currentEigenvalues[j + 1] - currentEigenvalues[j];
+
+			if( currentEigenvalues[j] > powerThreshold ) //eigenValueDifference > threshold && eigenValueDifference - (eigenvalueAverage / j) > threshold )
 			{
 				eigenvaluesToRemove += 1;
 			}
@@ -375,6 +375,8 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 			}
 		}
 
+		//Average the eigenvalue power by the number of dimensions we are NOT going to remove
+		eigenvalueAverage /= (RFIMStruct->h_valuesPerSample - eigenvaluesToRemove);
 
 		//There is no RFI here, skip the next step
 		if(eigenvaluesToRemove == 0)
@@ -385,11 +387,26 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 					RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset),
 					sizeof(float) * RFIMStruct->h_valuesPerSample * RFIMStruct->h_numberOfSamples);
 
+			//Set the mask value for the freq channel, if we are generating one
+			if(RFIMStruct->h_generatingMask)
+			{
+				RFIMStruct->h_maskValues[i] = 0;
+			}
+
 			continue;
+		}
+
+
+		//Set the mask value for the freq channel, if we are generating one
+		//Set this byte for the mask
+		if(RFIMStruct->h_generatingMask)
+		{
+			RFIMStruct->h_maskValues[i] = 1;
 		}
 
 		//Keep track of how many dimensions are removed
 		totalDimensionsRemoved += eigenvaluesToRemove;
+
 
 		//Set the scale factors in the scale matrix
 		for(uint64_t j = (RFIMStruct->h_valuesPerSample - eigenvaluesToRemove);
@@ -429,8 +446,8 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 
 
 
-	if(totalDimensionsRemoved > 0)
-		printf("Dimensions removed: %llu\n", totalDimensionsRemoved);
+	//if(totalDimensionsRemoved > 0)
+	//	printf("Dimensions removed: %llu\n", totalDimensionsRemoved);
 
 
 

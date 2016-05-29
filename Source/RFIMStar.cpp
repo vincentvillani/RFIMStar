@@ -25,6 +25,9 @@ void RFIMStarRoutine(RFIMConfiguration* configuration)
 	//Open the filterbanks
 	std::vector<SigprocFilterbank*> filterbanks;
 	std::vector<SigprocFilterbankOutput*> outputFilterbanks;
+	SigprocFilterbankOutput* maskFilterbank = NULL;
+
+
 
 	for(uint32_t i = 1; i < configuration->beamNum + 1; ++i)
 	{
@@ -49,6 +52,17 @@ void RFIMStarRoutine(RFIMConfiguration* configuration)
 		SigprocFilterbank* filterbankFile = new SigprocFilterbank(ssInputFilterbankFile.str());
 		SigprocFilterbankOutput* outputFilterbankFile = new SigprocFilterbankOutput(ssInputFilterbankFile.str(), ssOutputFilterbankFile.str());
 
+		//Should we generate a mask for when we identify RFI?
+		if(configuration->generatingMask && maskFilterbank == NULL)
+		{
+			ssOutputFilterbankFile.str(""); //Reset the SS
+			ssOutputFilterbankFile << configuration->outputFilenamePrefix << "/RFIMask.fil";
+
+			//Use the first filterbank's header for the mask filterbank
+			maskFilterbank = new SigprocFilterbankOutput(ssInputFilterbankFile.str(), ssOutputFilterbankFile.str());
+
+		}
+
 		//Add it to the vectors
 		filterbanks.push_back(filterbankFile);
 		outputFilterbanks.push_back(outputFilterbankFile);
@@ -72,14 +86,19 @@ void RFIMStarRoutine(RFIMConfiguration* configuration)
 	std::vector<RawDataBlock*> rawDataBlockVector;
 	uint64_t rawDataBlockArrayLength = ((configuration->numberOfWorkerThreads * configuration->windowSize *
 			configuration->channelNum * configuration->numBitsPerSample) / 8) * configuration->beamNum;
+	uint32_t packedMaskLength = 0;
 
-	//printf("rawDataTotal: %llu\n", rawDataBlockArrayLength);
+	if(configuration->generatingMask)
+	{
+		packedMaskLength = (configuration->channelNum / 8) * configuration->numberOfWorkerThreads;
+	}
+
 
 
 
 	for(uint32_t i = 0; i < configuration->rawDataBlockNum; ++i)
 	{
-		RawDataBlock* RDB = new RawDataBlock(i, rawDataBlockArrayLength, configuration->numBitsPerSample);
+		RawDataBlock* RDB = new RawDataBlock(i, rawDataBlockArrayLength, configuration->numBitsPerSample, packedMaskLength);
 		rawDataBlockVector.push_back(RDB);
 	}
 
@@ -95,7 +114,7 @@ void RFIMStarRoutine(RFIMConfiguration* configuration)
 		workerThreadDataVector.push_back(new WorkerThreadData());
 	}
 
-	WriterThreadData* writerThreadData = new WriterThreadData(outputFilterbanks);
+	WriterThreadData* writerThreadData = new WriterThreadData(outputFilterbanks, maskFilterbank);
 
 
 	//individual mailboxes
@@ -153,6 +172,9 @@ void RFIMStarRoutine(RFIMConfiguration* configuration)
 		delete filterbanks[i];
 		delete outputFilterbanks[i];
 	}
+
+	if(configuration->generatingMask)
+		delete maskFilterbank;
 
 	//Raw data blocks
 	for(uint32_t i = 0; i < rawDataBlockVector.size(); ++i)

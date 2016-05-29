@@ -9,9 +9,11 @@
 #include "../Header/WriterThreadData.h"
 
 
-WriterThreadData::WriterThreadData(std::vector<SigprocFilterbankOutput*> filterbankOutputVector)
+WriterThreadData::WriterThreadData(std::vector<SigprocFilterbankOutput*> filterbankOutputVector,
+		SigprocFilterbankOutput* maskOutputFilterbank)
 {
 	this->filterbankOutputVector = filterbankOutputVector;
+	this->maskFilterbank = maskOutputFilterbank;
 }
 
 

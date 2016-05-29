@@ -61,9 +61,16 @@ public:
 	float* h_outputSignal;
 	uint64_t h_outputSignalBatchOffset;
 
+	//Filterbank RFI mask
+	bool h_generatingMask;
+	unsigned char* h_maskValues;
+	uint32_t h_maskValuesLength;
+
+
+
 
 	//Constructors
-	RFIMMemoryBlock(uint64_t h_valuesPerSample, uint64_t h_numberOfSamples, uint64_t h_dimensionToReduce, uint64_t h_batchSize);
+	RFIMMemoryBlock(uint64_t h_valuesPerSample, uint64_t h_numberOfSamples, uint64_t h_dimensionToReduce, uint64_t h_batchSize, bool generatingMask);
 	~RFIMMemoryBlock();
 
 };

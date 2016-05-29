@@ -23,8 +23,9 @@ public:
 	std::mutex writeDataQueueMutex;
 	std::condition_variable writeDataQueueConditionVariable;
 	std::vector<SigprocFilterbankOutput*> filterbankOutputVector;
+	SigprocFilterbankOutput* maskFilterbank;
 
-	WriterThreadData(std::vector<SigprocFilterbankOutput*> filterbankOutputVector);
+	WriterThreadData(std::vector<SigprocFilterbankOutput*> filterbankOutputVector, SigprocFilterbankOutput* maskFilterbank);
 	~WriterThreadData();
 
 };
