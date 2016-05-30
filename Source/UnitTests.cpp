@@ -89,7 +89,7 @@ void PCAUnitTest()
 	memcpy(rfimMem.h_inputSignal, &data, sizeof(float) * 20);
 
 	//Print out the deprojected results inside this method
-	EigenReductionAndFiltering(&rfimMem);
+	//EigenReductionAndFiltering(&rfimMem);
 
 
 	for(uint32_t i = 0; i < 20; ++i)
@@ -296,8 +296,8 @@ void DetailedUnitTest()
 
 
 	//Do projection and deprojection
-	EigenReductionAndFiltering(&rfimMemoryBlockOne);
-	EigenReductionAndFiltering(&rfimMemoryBlockTwo);
+	//EigenReductionAndFiltering(&rfimMemoryBlockOne);
+	//EigenReductionAndFiltering(&rfimMemoryBlockTwo);
 
 
 	//Print out the signal after
@@ -856,7 +856,7 @@ void ProjectionDeprojectionUnitTest()
 
 
 	//Do the projection/reprojection
-	EigenReductionAndFiltering(RFIMStruct);
+	//EigenReductionAndFiltering(RFIMStruct);
 
 
 
@@ -960,7 +960,7 @@ void Remove1DProjectionDeprojectionUnitTest()
 
 
 	//Do the projection/reprojection
-	EigenReductionAndFiltering(RFIMStruct);
+	//EigenReductionAndFiltering(RFIMStruct);
 
 
 

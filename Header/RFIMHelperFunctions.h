@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 #include "RFIMMemoryBlock.h"
+#include "RFIMConfiguration.h"
 
 //Stats
 //------------------------------------------------------
@@ -35,7 +36,7 @@ void CalculateCovarianceMatrix(RFIMMemoryBlock* RFIMStruct);
 void EigenvalueSolver(RFIMMemoryBlock* RFIMStruct);
 
 
-void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct);
+void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct, RFIMConfiguration* RFIMConfiguration);
 
 
 

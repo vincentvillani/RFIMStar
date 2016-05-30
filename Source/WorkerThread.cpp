@@ -138,13 +138,13 @@ void pack(unsigned char* buffer, unsigned char* outbuffer, int nbits, int nbytes
 
 
 
-void RFIM(RFIMMemoryBlock* rfimMemoryBlock)
+void RFIM(RFIMMemoryBlock* rfimMemoryBlock, RFIMConfiguration* RFIMConfiguration)
 {
 	CalculateCovarianceMatrix(rfimMemoryBlock);
 
 	EigenvalueSolver(rfimMemoryBlock);
 
-	EigenReductionAndFiltering(rfimMemoryBlock);
+	EigenReductionAndFiltering(rfimMemoryBlock, RFIMConfiguration);
 }
 
 
@@ -243,7 +243,7 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 
 
 		//Run RFIM
-		RFIM(rfimMemoryBlock);
+		RFIM(rfimMemoryBlock, configuration);
 
 
 

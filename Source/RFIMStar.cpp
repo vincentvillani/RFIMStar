@@ -61,6 +61,10 @@ void RFIMStarRoutine(RFIMConfiguration* configuration)
 			//Use the first filterbank's header for the mask filterbank
 			maskFilterbank = new SigprocFilterbankOutput(ssInputFilterbankFile.str(), ssOutputFilterbankFile.str());
 
+			//Set the nbits to 1 for the mask Filterbank
+			//int maskFilterbankNbits = 1;
+			//header_overwrite(maskFilterbank->outputFileStream, "nbits", maskFilterbankNbits);
+
 		}
 
 		//Add it to the vectors

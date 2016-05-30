@@ -25,6 +25,7 @@ public:
 	uint32_t rawDataBlockNum; //Number of raw data blocks that can be used as I/O buffers
 	uint32_t numBitsPerSample; //Number of bits per sample, set by the filterbank files
 	bool generatingMask; //Do we want to generate a mask?
+	float powerThreshold;
 
 
 	std::string inputFilenamePrefix;
@@ -32,6 +33,8 @@ public:
 
 	std::string outputFilenamePrefix;
 	std::string outputFilenamePostfix;
+
+	RFIMConfiguration();
 
 	RFIMConfiguration(uint32_t workerThreadNum, uint32_t windowSize, uint32_t beamNum, uint32_t dimensionsToReduce,
 			uint32_t rawDataBlockNum,

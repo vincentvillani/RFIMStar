@@ -301,7 +301,7 @@ void EigenvalueSolver(RFIMMemoryBlock* RFIMStruct)
 }
 
 
-void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
+void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct, RFIMConfiguration* RFIMConfiguration)
 {
 
 #ifdef BUILD_WITH_MKL
@@ -353,7 +353,7 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 		uint32_t eigenvaluesToRemove = 0;
 		float eigenvalueAverage = 0;
 
-		float powerThreshold = 2.0f;
+		//float powerThreshold = 2.0f;
 
 		//Detect outliers in the dataset using modified z-values
 		//A value over 3.5f can be considered an outlier
@@ -365,7 +365,7 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct)
 			//if the difference in magnitude of the eigenvalues is bigger than the threshold, remove it?
 			//float eigenValueDifference = currentEigenvalues[j + 1] - currentEigenvalues[j];
 
-			if( currentEigenvalues[j] > powerThreshold ) //eigenValueDifference > threshold && eigenValueDifference - (eigenvalueAverage / j) > threshold )
+			if( currentEigenvalues[j] > RFIMConfiguration->powerThreshold ) //eigenValueDifference > threshold && eigenValueDifference - (eigenvalueAverage / j) > threshold )
 			{
 				eigenvaluesToRemove += 1;
 			}
