@@ -31,8 +31,8 @@ void RFIMStarRoutine(RFIMConfiguration* configuration)
 
 	for(uint32_t i = 1; i < configuration->beamNum + 1; ++i)
 	{
-		ssInputFilterbankFile << configuration->inputFilenamePrefix;
-		ssOutputFilterbankFile << configuration->outputFilenamePrefix;
+		ssInputFilterbankFile << configuration->inputFilenamePrefix + "/";
+		ssOutputFilterbankFile << configuration->outputFilenamePrefix + "/";
 
 		if(i < 10)
 		{
@@ -45,8 +45,8 @@ void RFIMStarRoutine(RFIMConfiguration* configuration)
 			ssOutputFilterbankFile << i;
 		}
 
-		ssInputFilterbankFile << configuration->inputFilenamePostfix;
-		ssOutputFilterbankFile << configuration->outputFilenamePostfix;
+		ssInputFilterbankFile << "/" + configuration->inputFilenamePostfix;
+		ssOutputFilterbankFile << "_" + configuration->outputFilenamePostfix;
 
 		//Open the input and output filterbank file
 		SigprocFilterbank* filterbankFile = new SigprocFilterbank(ssInputFilterbankFile.str());
