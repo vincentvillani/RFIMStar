@@ -313,10 +313,11 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct, RFIMConfiguration* 
 	uint64_t totalDimensionsRemoved = 0;
 
 
+	//For each freq channel
 	for(uint64_t i = 0; i < RFIMStruct->h_batchSize; ++i)
 	{
 
-		//1. Put all the signals into the eigenvector space. E(t)S
+		//1. Put the signal into the eigenvector space. E(t)S
 		cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
 				RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
 				alpha, RFIMStruct->h_covarianceMatrix + (i * RFIMStruct->h_covarianceMatrixBatchOffset), RFIMStruct->h_valuesPerSample,
@@ -324,103 +325,33 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct, RFIMConfiguration* 
 				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
 
 
-		//2. Scale the dimensions to reduce axis of the space
 
-		//Reset the state of the scale matrix
-		//There is only one scale matrix
-		memset(RFIMStruct->h_scaleMatrix, 0, sizeof(float) * RFIMStruct->h_scaleMatrixLength);
+		//Copy the eigenvector matrix U into the scale matrix
+		memcpy(RFIMStruct->h_scaleMatrix, RFIMStruct->h_covarianceMatrix + (i * RFIMStruct->h_covarianceMatrixBatchOffset),
+				sizeof(float) * RFIMStruct->h_scaleMatrixLength);
 
-		//Set it to the identity matrix
-		for(uint64_t j = 0; j < RFIMStruct->h_scaleMatrixLength; j += (RFIMStruct->h_valuesPerSample + 1))
+		//'Normalise' the columns of the copied U matrix by taking away the mean from each element
+		//For each column
+		for(uint32_t col = 0; col < RFIMStruct->h_valuesPerSample; ++col)
 		{
-			RFIMStruct->h_scaleMatrix[j] = 1;
- 		}
+			float* currentCol = RFIMStruct->h_scaleMatrix + (col * RFIMStruct->h_valuesPerSample);
+			float colMean = 0;
 
-
-		//Detect outliers in the data set
-
-		float* currentEigenvalues = RFIMStruct->h_S + (i * RFIMStruct->h_SBatchOffset);
-
-		//The eigenvalues are already sorted, just get one in the middle or close to the middle (if even)
-		//float eigenvalueMedian =  *(currentEigenvalues + (uint64_t)(RFIMStruct->h_valuesPerSample / 2.0f));
-
-		//Calculate the median absolute deviation
-		//Use the h_meanvec as working space, we don't need it at this point
-		//float medianAbsoluteDeviation = CalculateMeanAbsoluteDeviation(currentEigenvalues,
-		//		RFIMStruct->h_meanVec, RFIMStruct->h_valuesPerSample);
-
-
-		uint32_t eigenvaluesToRemove = 0;
-		float eigenvalueAverage = 0;
-
-		//float powerThreshold = 2.0f;
-
-		//Detect outliers in the dataset using modified z-values
-		//A value over 3.5f can be considered an outlier
-		//If it's not over 3.5, add it to the average
-		for(uint64_t j = 0; j < RFIMStruct->h_valuesPerSample; ++j)
-		{
-			//float modifiedZValue = CalculateModifiedZScore(currentEigenvalues[j], eigenvalueMedian, medianAbsoluteDeviation);
-
-			//if the difference in magnitude of the eigenvalues is bigger than the threshold, remove it?
-			//float eigenValueDifference = currentEigenvalues[j + 1] - currentEigenvalues[j];
-
-			if( currentEigenvalues[j] > RFIMConfiguration->powerThreshold ) //eigenValueDifference > threshold && eigenValueDifference - (eigenvalueAverage / j) > threshold )
+			//Find the mean
+			for(uint32_t row = 0; row < RFIMStruct->h_valuesPerSample; ++row)
 			{
-				eigenvaluesToRemove += 1;
-			}
-			else
-			{
-				eigenvalueAverage += currentEigenvalues[j];
-			}
-		}
-
-		//Average the eigenvalue power by the number of dimensions we are NOT going to remove
-		eigenvalueAverage /= (RFIMStruct->h_valuesPerSample - eigenvaluesToRemove);
-
-		//There is no RFI here, skip the next step
-		if(eigenvaluesToRemove == 0)
-		{
-			//TODO: Line it up somehow so I don't have to do this?
-			//Just copy the signal across so the next step has valid data
-			memcpy(RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset),
-					RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset),
-					sizeof(float) * RFIMStruct->h_valuesPerSample * RFIMStruct->h_numberOfSamples);
-
-			//Set the mask value for the freq channel, if we are generating one
-			if(RFIMStruct->h_generatingMask)
-			{
-				RFIMStruct->h_maskValues[i] = 0;
+				colMean += currentCol[row];
 			}
 
-			continue;
+			colMean /= RFIMStruct->h_valuesPerSample;
+
+
+			//Subtract the mean from each element
+			for(uint32_t row = 0; row < RFIMStruct->h_valuesPerSample; ++row)
+			{
+				currentCol[row] -= colMean;
+			}
 		}
-
-
-		//Set the mask value for the freq channel, if we are generating one
-		//Set this byte for the mask
-		if(RFIMStruct->h_generatingMask)
-		{
-			RFIMStruct->h_maskValues[i] = 1;
-		}
-
-		//Keep track of how many dimensions are removed
-		totalDimensionsRemoved += eigenvaluesToRemove;
-
-
-		//Set the scale factors in the scale matrix
-		for(uint64_t j = (RFIMStruct->h_valuesPerSample - eigenvaluesToRemove);
-				j < RFIMStruct->h_valuesPerSample; ++j)
-		{
-
-			//average / eigenvalue = scale factor
-			RFIMStruct->h_scaleMatrix[ (j * RFIMStruct->h_valuesPerSample) + j ] = //1.0f -
-					(eigenvalueAverage / RFIMStruct->h_S[(i * RFIMStruct->h_SBatchOffset) + j]);
-
-
-		}
-
-
 
 
 
@@ -433,13 +364,14 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct, RFIMConfiguration* 
 				RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
 
 
-
+		/*
 		//3. Put the signal back into the original space
 		cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
 				RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
 				alpha, RFIMStruct->h_covarianceMatrix + (i * RFIMStruct->h_covarianceMatrixBatchOffset), RFIMStruct->h_valuesPerSample,
 				RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset), RFIMStruct->h_valuesPerSample, beta,
 				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
+		*/
 
 
 	}
