@@ -13,13 +13,12 @@
 
 
 
-
+//TODO: Add a progress indicator
 //TODO: Set the nbits (and other stuff?) for mask file in the sigproc header
-//TODO: Make the configuration be setup by passing arguments to the program via the command line
 //TODO: Figure put a better way to set a threshold?
 //TODO: insert test signals into the actual filterbank files
 //TODO: Add the ability to read in and write out different nbit values
-//TODO: Do a normalisation step before computing the covariance matrix, to see if there are any huge outliers, if there are, replace it with white noise or zeroes?
+//TODO: (Probably not anymore) Do a normalisation step before computing the covariance matrix, to see if there are any huge outliers, if there are, replace it with white noise or zeroes?
 		//Median absolute deviation (MAD) to normalise
 int main(int argc, char** argv)
 {
@@ -31,7 +30,7 @@ int main(int argc, char** argv)
 	RFIMConfiguration configuration;
 
 	// Wrap everything in a try block.  Do this every time,
-	// because exceptions will be thrown for problems.
+	// because exceptions will be thrown for problems when parsing
 	try
 	{
 

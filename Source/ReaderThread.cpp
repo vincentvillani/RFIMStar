@@ -122,7 +122,7 @@ void ReaderThreadMain(std::vector<SigprocFilterbank*>& filterbankVector, ReaderT
 		}
 
 		//if(currentBuffer->isLastBlock)
-		std::cout << "read in " << currentBuffer->usedDataLength << " bytes..." << std::endl;
+		//std::cout << "read in " << currentBuffer->usedDataLength << " bytes..." << std::endl;
 
 
 		//Send the data off to the worker threads
