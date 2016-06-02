@@ -12,10 +12,10 @@
 #include "tclap/CmdLine.h"
 
 
-
+//TODO: Per sample resolution?
 //TODO: Add a progress indicator
 //TODO: Set the nbits (and other stuff?) for mask file in the sigproc header
-//TODO: Figure put a better way to set a threshold?
+//TODO: Figure put a better way to set/use a threshold?
 //TODO: insert test signals into the actual filterbank files
 //TODO: Add the ability to read in and write out different nbit values
 //TODO: (Probably not anymore) Do a normalisation step before computing the covariance matrix, to see if there are any huge outliers, if there are, replace it with white noise or zeroes?

@@ -35,6 +35,9 @@ void WriterThreadMain(WriterThreadData* writerThreadData, RFIMConfiguration* con
 {
 	bool shouldShutdown = false;
 	uint64_t currentBlockID = 0;
+	uint64_t samplesProcessed = 0;
+	uint64_t totalSamples = writerThreadData->filterbankOutputVector[0]->header.nsamples;
+	float previousPercentage = 0.0f;
 
 
 	while(shouldShutdown == false)
@@ -88,7 +91,7 @@ void WriterThreadMain(WriterThreadData* writerThreadData, RFIMConfiguration* con
 
 
 		//if(currentRawDataBlock->isLastBlock)
-		std::cout << "Block is writing " << bytesToWritePerFilterbank * configuration->beamNum << " bytes..." << std::endl;
+		//std::cout << "Block is writing " << bytesToWritePerFilterbank * configuration->beamNum << " bytes..." << std::endl;
 
 		//std::cout << "WriterThread: Writing data..." << std::endl;
 
@@ -114,6 +117,20 @@ void WriterThreadMain(WriterThreadData* writerThreadData, RFIMConfiguration* con
 		shouldShutdown = currentRawDataBlock->isLastBlock;
 		currentBlockID += 1;
 
+		//Keep track of the percentage of completion and print out the completion, every once in a while
+		samplesProcessed += configuration->windowSize * configuration->numberOfWorkerThreads;
+		float completionPercentage = (((float)samplesProcessed) / totalSamples) * 100.0f;
+
+		//Every five percent of completion, print out the update
+		if(completionPercentage - previousPercentage > 5.0f)
+		{
+			previousPercentage = completionPercentage;
+
+			std::cout << "Completion: " << completionPercentage << "%" << std::endl;
+		}
+
+
+
 
 		//Pass this rawDataBlock back to the reader thread
 		masterMailbox->writerReaderMailbox->Writer_PassRawDataBlockToReaderThread(currentRawDataBlock);
@@ -121,7 +138,7 @@ void WriterThreadMain(WriterThreadData* writerThreadData, RFIMConfiguration* con
 
 	}
 
-	std::cout << "Writer thread finishing..." << std::endl;
+	//std::cout << "Writer thread finishing..." << std::endl;
 
 	//Return and close the thread
 

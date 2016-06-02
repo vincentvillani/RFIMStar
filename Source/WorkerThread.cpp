@@ -263,7 +263,7 @@ void WorkerThreadMain(uint32_t workerThreadID, WorkerThreadData* threadData, Mas
 	}
 
 
-	std::cout << "Worker thread finishing..." << std::endl;
+	//std::cout << "Worker thread finishing..." << std::endl;
 
 	delete rfimMemoryBlock;
 
