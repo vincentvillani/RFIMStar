@@ -33,7 +33,7 @@ RFIMConfiguration::RFIMConfiguration()
 
 RFIMConfiguration::RFIMConfiguration(uint32_t workerThreadNum, uint32_t windowSize, uint32_t beamNum, uint32_t dimensionsToReduce, uint32_t rawDataBlockNum,
 		std::string inputFilenamePrefix, std::string inputFilenamePostfix,
-		std::string outputFilenamePrefix, std::string outputFilenamePostfix, bool generatingMask)
+		std::string outputFilenamePrefix, std::string outputFilenamePostfix, bool generatingMask, RFIMMode mode)
 {
 
 	this->numberOfWorkerThreads = workerThreadNum;
@@ -53,6 +53,7 @@ RFIMConfiguration::RFIMConfiguration(uint32_t workerThreadNum, uint32_t windowSi
 	this->generatingMask = generatingMask;
 
 	this->powerThreshold = 0;
+	this->rfimMode = mode;
 }
 
 

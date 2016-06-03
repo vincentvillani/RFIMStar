@@ -424,8 +424,8 @@ void WorkerThreadDeMultiplexData(RFIMMemoryBlock* rfimMemoryBlock, RFIMConfigura
 				//printf("inputSignalIndex: %llu\n", currentInputFreqChannelOffset + currentInputTimeSampleOffset + b);
 				//printf("outputSignalIndex: %llu\n\n", (b * outputBeamOffset) + currentInputTimeSampleOffset + f);
 
-				rfimMemoryBlock->h_inputSignal[(b * (outputBeamOffset)) + t * configuration->channelNum + f] =
-						rfimMemoryBlock->h_outputSignal[currentInputFreqChannelOffset + currentInputTimeSampleOffset + b];
+				rfimMemoryBlock->h_outputSignal[(b * (outputBeamOffset)) + t * configuration->channelNum + f] =
+						rfimMemoryBlock->h_inputSignal[currentInputFreqChannelOffset + currentInputTimeSampleOffset + b];
 
 
 			}
@@ -457,7 +457,7 @@ void WorkerThreadPackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock, R
 {
 
 	//use the input signal data as a buffer to convert the outputSignal floats into unsigned chars
-	unsigned char* outputCharData = (unsigned char*)rfimMemoryBlock->h_outputSignal;
+	unsigned char* outputCharData = (unsigned char*)rfimMemoryBlock->h_inputSignal;
 
 	//Interpret the output data as chars
 	//TODO: add this back? rfimMemoryBlock->h_numberOfSamples instead of configuration->windowSize
@@ -471,7 +471,7 @@ void WorkerThreadPackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock, R
 		//MAKE SURE IT'S WITHIN THE RANGE OF THE NBITS
 		//BOUND IT IF IT'S NOT?
 		//(std::min(std::max(value, 0.0f), maxValue) + 0.5f);
-		outputCharData[i] =  (std::min( std::max( (rfimMemoryBlock->h_inputSignal[i] + 0.5f), 0.0f ), maxValue));
+		outputCharData[i] =  (std::min( std::max( (rfimMemoryBlock->h_outputSignal[i] + 0.5f), 0.0f ), maxValue));
 	}
 
 

@@ -10,10 +10,11 @@
 #include "Header/RFIMStar.h"
 #include "Header/UnitTests.h"
 #include "tclap/CmdLine.h"
+#include "Header/RFIMConfiguration.h"
 
 
+//TODO: Add flag to only do the first x samples
 //TODO: Per sample resolution?
-//TODO: Add a progress indicator
 //TODO: Set the nbits (and other stuff?) for mask file in the sigproc header
 //TODO: Figure put a better way to set/use a threshold?
 //TODO: insert test signals into the actual filterbank files
@@ -58,6 +59,11 @@ int main(int argc, char** argv)
 				"Sets the power threshold for removing RFI. Set it to be low if you want to be more aggressive, higher if you want to be gentle."
 				, true, 2.0f,
 				"A floating point number indicating the RFI strength needed in order for it to be removed");
+
+		TCLAP::ValueArg<int> rfimMode("m", "mode",
+				"Sets the mode of RFIM. Controls what it does when it finds RFIM"
+				, false, ATTENUATE,
+				"An enum value that indicates the mode for RFIM to run in");
 
 		uint32_t defaultThreadNum = std::thread::hardware_concurrency();
 
@@ -119,6 +125,7 @@ int main(int argc, char** argv)
 		configuration.rawDataBlockNum = rawBlockNum.getValue();
 		configuration.generatingMask = shouldGenerateMask.getValue();
 		configuration.powerThreshold = powerThreshold.getValue();
+		configuration.rfimMode = (RFIMMode)rfimMode.getValue();
 
 
 	}
@@ -139,6 +146,15 @@ int main(int argc, char** argv)
 	std::cout << "Raw data blocks: " << configuration.rawDataBlockNum << std::endl;
 	std::cout << "Generating mask?: " << configuration.generatingMask << std::endl;
 	std::cout << "Power threshold: " << configuration.powerThreshold << std::endl;
+
+	if(configuration.rfimMode == ZERO)
+	{
+		std::cout << "RFIM Mode: Zero" << std::endl;
+	}
+	else if(configuration.rfimMode == ATTENUATE)
+	{
+		std::cout << "RFIM Mode: Attenuate" << std::endl;
+	}
 
 
 	/*

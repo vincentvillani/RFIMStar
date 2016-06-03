@@ -13,6 +13,12 @@
 
 #include "../DeadSigproc/SigprocFilterbank.h"
 
+enum RFIMMode
+{
+	ZERO,
+	ATTENUATE
+};
+
 class RFIMConfiguration
 {
 public:
@@ -24,8 +30,10 @@ public:
 	uint32_t dimensionsToReduce; //Number of dimensions to reduce
 	uint32_t rawDataBlockNum; //Number of raw data blocks that can be used as I/O buffers
 	uint32_t numBitsPerSample; //Number of bits per sample, set by the filterbank files
+	//uint64_t totalSamplesToProcess; //Number of samples to process if you don't want to process the whole file
 	bool generatingMask; //Do we want to generate a mask?
 	float powerThreshold;
+	RFIMMode rfimMode;
 
 
 	std::string inputFilenamePrefix;
@@ -39,7 +47,7 @@ public:
 	RFIMConfiguration(uint32_t workerThreadNum, uint32_t windowSize, uint32_t beamNum, uint32_t dimensionsToReduce,
 			uint32_t rawDataBlockNum,
 			std::string inputFilenamePrefix, std::string inputFilenamePostfix,
-			std::string outputFilenamePrefix, std::string outputFilenamePostfix, bool generatingMask);
+			std::string outputFilenamePrefix, std::string outputFilenamePostfix, bool generatingMask, RFIMMode mode);
 
 	~RFIMConfiguration();
 

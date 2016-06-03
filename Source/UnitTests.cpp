@@ -139,7 +139,7 @@ void DetailedUnitTest()
 
 
 	RFIMConfiguration configuration = RFIMConfiguration(numberOfThreads, sampleNum, valuesPerSample,
-			dimensionToReduce, 1, "", "", "", "", 0);
+			dimensionToReduce, 1, "", "", "", "", 0, ATTENUATE);
 	configuration.channelNum = channelNum; //USUALLY SET BY READING FILTERBANK FILES
 	configuration.numBitsPerSample = nBits; //USUALLY SET BY READING FILTERBANK FILES
 
@@ -399,7 +399,7 @@ void MultiplexDemultiplexUnitTest()
 	//Setup memory
 	RFIMMemoryBlock* RFIMMemBlock = new RFIMMemoryBlock(numberOfBeams, numberOfSamples, dimensionsToReduce, freqChannelNum, false);
 	RFIMConfiguration* configuration = new RFIMConfiguration(numberOfWorkerThreads, numberOfSamples, numberOfBeams, dimensionsToReduce,
-			numberOfRawDatablocks, "", "", "", "", false);
+			numberOfRawDatablocks, "", "", "", "", false, ATTENUATE);
 	configuration->channelNum = freqChannelNum; //Usually set by the filterbank files, so we have to set it manually here
 
 	//Setup the signal
@@ -1016,7 +1016,7 @@ void PackingUnpackingUnitTest()
 
 	RFIMConfiguration configuration = RFIMConfiguration(numberOfWorkerThreads, windowSize, beamNum, dimensionsToReduce, rawDataBlockNum,
 			inputFilenamePrefix, inputFilenamePostfix,
-			outputFilenamePrefix, outputFilenamePostfix, false);
+			outputFilenamePrefix, outputFilenamePostfix, false, ATTENUATE);
 
 
 	//Run the routine

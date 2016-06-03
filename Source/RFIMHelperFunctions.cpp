@@ -18,6 +18,9 @@
 #endif
 
 
+
+#define POWER_THRESHOLD (0.3f)
+
 float CalculateMean(float* dataArray, uint64_t dataLength)
 {
 #ifdef BUILD_WITH_MKL
@@ -76,10 +79,15 @@ float CalculateStandardDeviation(float* dataArray, uint64_t dataLength, float me
 
 int compareFunction(const void* a, const void* b)
 {
-	float floata = *((float*)a);
-	float floatb = *((float*)b);
+	float floata = (*(float*)a);
+	float floatb = (*(float*)b);
 
-	return floata - floatb;
+	if(floata > floatb)
+		return 1;
+	else if(floata < floatb)
+		return -1;
+	else
+		return 0;
 }
 
 float CalculateMedian(float* dataArray, uint64_t dataLength)
@@ -99,6 +107,8 @@ float CalculateMeanAbsoluteDeviation(float* dataArray, float* workingSpace, uint
 
 	float median1 = CalculateMedian(workingSpace, dataLength);
 
+	//printf("Median1: %f\n", median1);
+
 	//Now get the absolute deviations from that median
 	for(uint64_t i = 0; i < dataLength; ++i)
 	{
@@ -106,7 +116,11 @@ float CalculateMeanAbsoluteDeviation(float* dataArray, float* workingSpace, uint
 	}
 
 	//Find the median of the absolute deviations
-	return CalculateMedian(workingSpace, dataLength);
+	float median2 = CalculateMedian(workingSpace, dataLength);
+
+	//printf("Median2: %f\n", median2);
+
+	return median2;
 
 }
 
@@ -227,7 +241,7 @@ void EigenvalueSolver(RFIMMemoryBlock* RFIMStruct)
 		if(info != 0)
 		{
 			//If info = -i, the i-th parameter had an illegal value
-			//If info = i, then sgesdd did not converge, updataing process failed
+			//If info = i, then sgesdd did not converge, updating process failed
 			fprintf(stderr, "Host_EigenvalueSolver: SVD computation didn't converge. Info: %d\n", info);
 			exit(1);
 		}
@@ -313,9 +327,128 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct, RFIMConfiguration* 
 	uint64_t totalDimensionsRemoved = 0;
 
 
+	//Values per sample = number of beams
+	//Number of samples = number of samples in a window
+	//batch size = number of freq channels
+
+
 	//For each freq channel
 	for(uint64_t i = 0; i < RFIMStruct->h_batchSize; ++i)
 	{
+
+
+		//For each eigenvector * eigenvalue pair, multiply them and go through and see how many elements are larger than some threshold
+		//A good threshold is probably around 4 or 5. (This is because RFI *tends* to have an eigenvalue larger than around 2 ~ 2.5
+
+		//Count how many elements in the eigenvectors are above the threshold, if it's than three or less, we
+		//leave it and just mark it in the mask file.
+
+		uint32_t eigenVectorsToRemove = 0;
+
+		//If it's greater than three, zero it out (the eigenvalue) and repeat this process for the other eigenvectors
+		//Remember MKL returns eigenvectors from lowest to highest, so go backwards through the matrix
+		for(uint32_t col = RFIMStruct->h_valuesPerSample - 1; col > 0; --col)
+		{
+
+			//Is this column even worth looking at?
+			//Is it's eigenvalue above the threshold?
+			if(RFIMStruct->h_S[ (i * RFIMStruct->h_SBatchOffset) + col ] < RFIMConfiguration->powerThreshold)
+			{
+				break;
+			}
+
+			//TODO: REMOVE THIS IF ADDING CODE COMMENTED BELOW BACK!
+			eigenVectorsToRemove += 1;
+
+
+			/*
+			//Figure out the location of the column we are looking at
+			float* currentCol = RFIMStruct->h_covarianceMatrix +
+					(i * RFIMStruct->h_covarianceMatrixBatchOffset) + (col * RFIMStruct->h_valuesPerSample);
+
+
+
+			for(uint32_t row = 0; row < RFIMStruct->h_valuesPerSample; ++row)
+			{
+				//Multiply each eigenvector element with it's corresponding eigenvalue
+				RFIMStruct->h_outputSignal[row] = currentCol[row] * RFIMStruct->h_S[col];
+			}
+
+			float columnMean = CalculateMean(RFIMStruct->h_outputSignal, RFIMStruct->h_valuesPerSample);
+			float columnMedian = currentCol[ RFIMStruct->h_valuesPerSample / 2 ];
+			float columnMeanAbsoluteDeviation = CalculateMeanAbsoluteDeviation(RFIMStruct->h_outputSignal, RFIMStruct->h_outputSignal + RFIMStruct->h_valuesPerSample,
+					RFIMStruct->h_valuesPerSample);
+
+			//printf("Mean: %f\n", columnMean);
+			//printf("Median: %f\n", columnMedian);
+			//printf("MAD: %f\n", columnMeanAbsoluteDeviation);
+
+
+
+			uint32_t numberOfPowerEigenvectorElements = 0;
+
+			//Use the first RFIMStruct->h_valuesPerSample output signal elements as working space because allocating memory takes time...
+			for(uint32_t row = 0; row < RFIMStruct->h_valuesPerSample; ++row)
+			{
+
+
+				//Check if it's an outlier
+				float modifiedZScore = CalculateModifiedZScore(RFIMStruct->h_outputSignal[row], columnMedian, columnMeanAbsoluteDeviation);
+				//printf("Sample: %f\n", RFIMStruct->h_outputSignal[row]);
+				//printf("ModifiedZ: %f\n", modifiedZScore);
+
+				//exit(1);
+
+				//This is a potential outlier
+				if( modifiedZScore > 3.5f)
+				{
+					numberOfPowerEigenvectorElements += 1;
+				}
+
+			}
+
+
+
+
+			//Decision time...
+			//To zero or not to zero
+
+			//If greater than 3, zero
+			if(numberOfPowerEigenvectorElements > 3)
+			{
+				eigenVectorsToRemove += 1;
+			}
+			//There is something(s) that is above the power threshold, but not enough to zero
+			//Set the mask flag for this freq channel, because something interesting might be going on...
+			else if(numberOfPowerEigenvectorElements == 1)
+			{
+				//TODO: Set the mask
+
+				break;
+			}
+			//Nothing is going on here, just leave
+			else
+			{
+				break;
+			}
+
+			*/
+
+
+		}
+
+
+		//eigenVectorsToRemove = 1;
+
+		//If we are not removing anything we will just do the matrix multiplications for no reason...
+		//Skip to the next freq channel
+		if(eigenVectorsToRemove == 0)
+			continue;
+
+
+		totalDimensionsRemoved += eigenVectorsToRemove;
+
+
 
 		//1. Put the signal into the eigenvector space. E(t)S
 		cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
@@ -326,53 +459,64 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct, RFIMConfiguration* 
 
 
 
-		//Copy the eigenvector matrix U into the scale matrix
-		memcpy(RFIMStruct->h_scaleMatrix, RFIMStruct->h_covarianceMatrix + (i * RFIMStruct->h_covarianceMatrixBatchOffset),
-				sizeof(float) * RFIMStruct->h_scaleMatrixLength);
 
-		//'Normalise' the columns of the copied U matrix by taking away the mean from each element
-		//For each column
-		for(uint32_t col = 0; col < RFIMStruct->h_valuesPerSample; ++col)
+		//IF ZEROING
+		if(RFIMConfiguration->rfimMode == ZERO)
 		{
-			float* currentCol = RFIMStruct->h_scaleMatrix + (col * RFIMStruct->h_valuesPerSample);
-			float colMean = 0;
-
-			//Find the mean
-			for(uint32_t row = 0; row < RFIMStruct->h_valuesPerSample; ++row)
+			//Set the appropriate number of columns to zero
+			for(uint32_t col = RFIMStruct->h_valuesPerSample - 1; col > (RFIMStruct->h_valuesPerSample - 1) - eigenVectorsToRemove; --col)
 			{
-				colMean += currentCol[row];
+
+				//Figure out the location of the column we are looking at
+				float* currentCol = RFIMStruct->h_covarianceMatrix +
+						(i * RFIMStruct->h_covarianceMatrixBatchOffset) + (col * RFIMStruct->h_valuesPerSample);
+
+				//Set to zero
+				memset(currentCol, 0, sizeof(float) * RFIMStruct->h_valuesPerSample);
+			}
+		}
+		else if(RFIMConfiguration->rfimMode == ATTENUATE)
+		{
+
+			float mean = CalculateMean(RFIMStruct->h_S + (i * RFIMStruct->h_SBatchOffset),
+					RFIMStruct->h_valuesPerSample - eigenVectorsToRemove);
+
+			//TODO: I think this is ok?
+			//Attenuate the appropriate eigenvectors
+			for(uint32_t col = RFIMStruct->h_valuesPerSample - 1; col > (RFIMStruct->h_valuesPerSample - 1) - eigenVectorsToRemove; --col)
+			{
+				//Figure out the location of the column we are looking at
+				float* currentCol = RFIMStruct->h_covarianceMatrix +
+						(i * RFIMStruct->h_covarianceMatrixBatchOffset) + (col * RFIMStruct->h_valuesPerSample);
+
+				//attenuation factor = mean / eigenvalue
+				float attenuationFactor = mean / RFIMStruct->h_S[ (i * RFIMStruct->h_SBatchOffset) + col ];
+
+				//Attenuate each element in the eigenvector
+				for(uint32_t row = 0; row < RFIMStruct->h_valuesPerSample; ++row)
+				{
+					currentCol[row] *= attenuationFactor;
+				}
 			}
 
-			colMean /= RFIMStruct->h_valuesPerSample;
-
-
-			//Subtract the mean from each element
-			for(uint32_t row = 0; row < RFIMStruct->h_valuesPerSample; ++row)
-			{
-				currentCol[row] -= colMean;
-			}
+		}
+		else
+		{
+			fprintf(stderr, "EigenReductionAndFiltering: RFIM mode not set...\n");
+			exit(1);
 		}
 
 
 
 
-		//Do the scaling multiplication
-		cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
-				RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
-				alpha, RFIMStruct->h_scaleMatrix, RFIMStruct->h_valuesPerSample,
-				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample, beta,
-				RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
 
 
-		/*
-		//3. Put the signal back into the original space
+		//Do the inverse multiplication to bring it back to the original space
 		cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
 				RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
 				alpha, RFIMStruct->h_covarianceMatrix + (i * RFIMStruct->h_covarianceMatrixBatchOffset), RFIMStruct->h_valuesPerSample,
-				RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset), RFIMStruct->h_valuesPerSample, beta,
-				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
-		*/
-
+				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample, beta,
+				RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
 
 	}
 
