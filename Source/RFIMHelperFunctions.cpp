@@ -478,10 +478,10 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct, RFIMConfiguration* 
 		else if(RFIMConfiguration->rfimMode == ATTENUATE)
 		{
 
-			float mean = CalculateMean(RFIMStruct->h_S + (i * RFIMStruct->h_SBatchOffset),
+			float eigenvalueMean = CalculateMean(RFIMStruct->h_S + (i * RFIMStruct->h_SBatchOffset),
 					RFIMStruct->h_valuesPerSample - eigenVectorsToRemove);
 
-			//TODO: I think this is ok?
+
 			//Attenuate the appropriate eigenvectors
 			for(uint32_t col = RFIMStruct->h_valuesPerSample - 1; col > (RFIMStruct->h_valuesPerSample - 1) - eigenVectorsToRemove; --col)
 			{
@@ -490,7 +490,7 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct, RFIMConfiguration* 
 						(i * RFIMStruct->h_covarianceMatrixBatchOffset) + (col * RFIMStruct->h_valuesPerSample);
 
 				//attenuation factor = mean / eigenvalue
-				float attenuationFactor = mean / RFIMStruct->h_S[ (i * RFIMStruct->h_SBatchOffset) + col ];
+				float attenuationFactor = ( eigenvalueMean / (RFIMStruct->h_S[ (i * RFIMStruct->h_SBatchOffset) + col ]) );
 
 				//Attenuate each element in the eigenvector
 				for(uint32_t row = 0; row < RFIMStruct->h_valuesPerSample; ++row)
