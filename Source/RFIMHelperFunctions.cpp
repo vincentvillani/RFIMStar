@@ -462,7 +462,24 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct, RFIMConfiguration* 
 		//If we are not removing anything we will just do the matrix multiplications for no reason...
 		//Skip to the next freq channel
 		if(eigenVectorsToRemove == 0)
+		{
+
+			//Set the mask value for the freq channel, if we are generating one
+			if(RFIMStruct->h_generatingMask)
+			{
+				RFIMStruct->h_maskValues[i] = 0;
+			}
+
 			continue;
+		}
+
+
+
+		//Set the mask value for the freq channel, if we are generating one
+		if(RFIMStruct->h_generatingMask)
+		{
+			RFIMStruct->h_maskValues[i] = 1;
+		}
 
 
 		totalDimensionsRemoved += eigenVectorsToRemove;
@@ -549,11 +566,10 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct, RFIMConfiguration* 
 					RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
 
 
-			//TODO: Think of a nice way around this
-			//Copy the signal back into the input signal, that is where the next step expects the signal to be...
-			memcpy(RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset),
-					RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset),
-					signalBytes);
+			//Switch the input and output signal signals so the next step has the correct data
+			float* tempSignal = RFIMStruct->h_inputSignal;
+			RFIMStruct->h_inputSignal = RFIMStruct->h_outputSignal;
+			RFIMStruct->h_outputSignal = tempSignal;
 
 
 		}
