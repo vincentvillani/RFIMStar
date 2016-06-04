@@ -21,6 +21,23 @@
 
 #define POWER_THRESHOLD (0.3f)
 
+
+
+void SetScaleMatrixToIdentity(RFIMMemoryBlock* RFIMMemory)
+{
+	uint32_t scaleMatrixLength = RFIMMemory->h_valuesPerSample * RFIMMemory->h_valuesPerSample;
+	memset(RFIMMemory->h_scaleMatrix, 0, sizeof(float) * scaleMatrixLength); //Set everything to zero
+
+	//Set the diag to 1
+	for(uint32_t i = 0; i < scaleMatrixLength; i += RFIMMemory->h_valuesPerSample + 1)
+	{
+		RFIMMemory->h_scaleMatrix[i] = 1;
+	}
+
+
+}
+
+
 float CalculateMean(float* dataArray, uint64_t dataLength)
 {
 #ifdef BUILD_WITH_MKL
@@ -327,6 +344,8 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct, RFIMConfiguration* 
 	uint64_t totalDimensionsRemoved = 0;
 
 
+	uint64_t signalBytes = sizeof(float) * RFIMStruct->h_valuesPerSample * RFIMStruct->h_numberOfSamples;
+
 	//Values per sample = number of beams
 	//Number of samples = number of samples in a window
 	//batch size = number of freq channels
@@ -474,30 +493,68 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct, RFIMConfiguration* 
 				//Set to zero
 				memset(currentCol, 0, sizeof(float) * RFIMStruct->h_valuesPerSample);
 			}
+
+
+			//Do the inverse multiplication to bring it back to the original space
+			cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
+					RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
+					alpha, RFIMStruct->h_covarianceMatrix + (i * RFIMStruct->h_covarianceMatrixBatchOffset), RFIMStruct->h_valuesPerSample,
+					RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample, beta,
+					RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
+
+
+
 		}
 		else if(RFIMConfiguration->rfimMode == ATTENUATE)
 		{
 
+			//Calculate the mean of the eigenvalues that we are not going to attenuate
+			//We've decided that these are the the non-RFI power levels
 			float eigenvalueMean = CalculateMean(RFIMStruct->h_S + (i * RFIMStruct->h_SBatchOffset),
 					RFIMStruct->h_valuesPerSample - eigenVectorsToRemove);
 
 
-			//Attenuate the appropriate eigenvectors
+			//Set scale matrix to the identity matrix again
+			SetScaleMatrixToIdentity(RFIMStruct);
+
+
+			//Attenuate the appropriate eigenvectors, by setting the appropriate scale elements in the scale matrix
 			for(uint32_t col = RFIMStruct->h_valuesPerSample - 1; col > (RFIMStruct->h_valuesPerSample - 1) - eigenVectorsToRemove; --col)
 			{
-				//Figure out the location of the column we are looking at
-				float* currentCol = RFIMStruct->h_covarianceMatrix +
-						(i * RFIMStruct->h_covarianceMatrixBatchOffset) + (col * RFIMStruct->h_valuesPerSample);
 
-				//attenuation factor = mean / eigenvalue
+				//eigenvector mean / this columns eigenvalue
 				float attenuationFactor = ( eigenvalueMean / (RFIMStruct->h_S[ (i * RFIMStruct->h_SBatchOffset) + col ]) );
+				uint32_t scaleMatrixIndex = (col) * RFIMStruct->h_valuesPerSample + (col);
 
-				//Attenuate each element in the eigenvector
-				for(uint32_t row = 0; row < RFIMStruct->h_valuesPerSample; ++row)
-				{
-					currentCol[row] *= attenuationFactor;
-				}
+
+				RFIMStruct->h_scaleMatrix[scaleMatrixIndex] = attenuationFactor;
+
 			}
+
+
+			//Multiply by the scale matrix
+			cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
+					RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
+					alpha, RFIMStruct->h_scaleMatrix, RFIMStruct->h_valuesPerSample,
+					RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample, beta,
+					RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
+
+
+
+			//Do the inverse multiplication to bring it back to the original space
+			cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
+					RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
+					alpha, RFIMStruct->h_covarianceMatrix + (i * RFIMStruct->h_covarianceMatrixBatchOffset), RFIMStruct->h_valuesPerSample,
+					RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset), RFIMStruct->h_valuesPerSample, beta,
+					RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
+
+
+			//TODO: Think of a nice way around this
+			//Copy the signal back into the input signal, that is where the next step expects the signal to be...
+			memcpy(RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset),
+					RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset),
+					signalBytes);
+
 
 		}
 		else
@@ -511,12 +568,7 @@ void EigenReductionAndFiltering(RFIMMemoryBlock* RFIMStruct, RFIMConfiguration* 
 
 
 
-		//Do the inverse multiplication to bring it back to the original space
-		cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
-				RFIMStruct->h_valuesPerSample, RFIMStruct->h_numberOfSamples, RFIMStruct->h_valuesPerSample,
-				alpha, RFIMStruct->h_covarianceMatrix + (i * RFIMStruct->h_covarianceMatrixBatchOffset), RFIMStruct->h_valuesPerSample,
-				RFIMStruct->h_outputSignal + (i * RFIMStruct->h_outputSignalBatchOffset), RFIMStruct->h_valuesPerSample, beta,
-				RFIMStruct->h_inputSignal + (i * RFIMStruct->h_inputSignalBatchOffset), RFIMStruct->h_valuesPerSample);
+
 
 	}
 

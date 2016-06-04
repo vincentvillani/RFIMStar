@@ -13,6 +13,9 @@
 #include "Header/RFIMConfiguration.h"
 
 
+//TODO: Add the ability to generate a mask back in
+//TODO: Calculate and write out signal statistics
+	//Mean, std-dev, variance - all per beam
 //TODO: Add flag to only do the first x samples
 //TODO: Per sample resolution?
 //TODO: Set the nbits (and other stuff?) for mask file in the sigproc header

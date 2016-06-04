@@ -132,10 +132,20 @@
 
 
 		this->h_scaleMatrixLength = h_valuesPerSample * h_valuesPerSample;
-		this->h_scaleMatrix = new float[h_scaleMatrixLength];
+		this->h_scaleMatrix = new (std::nothrow) float[h_scaleMatrixLength];
 
-		this->h_scaleFactorsLength = h_dimensionToReduce;
-		this->h_scaleFactors = new float[h_scaleFactorsLength];
+		//Check if it was successfully allocated
+		if(this->h_scaleMatrix == NULL)
+		{
+			fprintf(stderr, "RFIMMemoryBlock::RFIMMemoryBlock(): Error allocating memory %llu bytes for h_S\n",
+											sizeof(float) * h_scaleMatrixLength);
+			exit(1);
+		}
+
+		//Set it all to zero
+		memset(this->h_scaleMatrix, 0, h_scaleMatrixLength * sizeof(float));
+
+
 
 
 		//Projected signal
@@ -193,7 +203,7 @@
 		delete [] this->h_S;
 
 		delete [] this->h_scaleMatrix;
-		delete [] this->h_scaleFactors;
+		//delete [] this->h_scaleFactors;
 
 		//delete [] this->h_eigenvectorColumnSwapperMatrix;
 

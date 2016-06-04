@@ -54,9 +54,6 @@ public:
 	float* h_scaleMatrix;
 	uint64_t h_scaleMatrixLength;
 
-	float* h_scaleFactors;
-	uint64_t h_scaleFactorsLength;
-
 
 	float* h_outputSignal;
 	uint64_t h_outputSignalBatchOffset;
