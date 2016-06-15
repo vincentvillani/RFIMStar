@@ -13,7 +13,6 @@
 #include "Header/RFIMConfiguration.h"
 
 
-//TODO: Add the ability to generate a mask back in
 //TODO: Add the ability to use the Z-values to detect outliers or not (uncomment code and have a switch basically)
 //TODO: Calculate and write out signal statistics
 	//Mean, std-dev, variance - all per beam
