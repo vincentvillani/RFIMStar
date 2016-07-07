@@ -523,6 +523,9 @@ void WorkerThreadPackData(uint32_t workerThreadID, RawDataBlock* rawDataBlock, R
 		pack(rfimMemoryBlock->h_maskValues,
 				rawDataBlock->packedMaskData + (rfimMemoryBlock->h_maskValuesLength / 8) * workerThreadID,
 				1, rfimMemoryBlock->h_maskValuesLength);
+
+		//Set all the data to zero, so the next work this thread does has a clean set of mask values
+		memset(rfimMemoryBlock->h_maskValues, 0, sizeof(unsigned char) * rfimMemoryBlock->h_maskValuesLength);
 	}
 
 }
